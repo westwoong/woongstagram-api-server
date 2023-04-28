@@ -18,7 +18,7 @@ const User = sequelize.define('users', {
         unique: true,
         comment: "사용자 닉네임"
     },
-    phone: {
+    phoneNumber: {
         type: DataTypes.INTEGER,
         allowNull: false,
         unique: true,
