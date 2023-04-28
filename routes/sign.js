@@ -1,4 +1,3 @@
-const crypto = require('crypto');
 const { User } = require('../models');
 
 const signUp = async (req, res) => {
@@ -25,8 +24,8 @@ const signUp = async (req, res) => {
     if (!nickname || nickname.length < 3 || nickname.length > 11) {
         return res.status(400).send("닉네임을 3글자 이상 10글자 이상으로 기재해주시기 바랍니다.");
     }
-    const CheckVaildNickName = /^[a-zA-Z0-9_]+$/; // 영어,숫자,언더스코어만 입력가능하게하는 정규식
-    if (!CheckVaildNickName.test(nickname)) {
+    const CheckValidNickName = /^[a-zA-Z0-9_]+$/; // 영어,숫자,언더스코어만 입력가능하게하는 정규식
+    if (!CheckValidNickName.test(nickname)) {
         return res.status(400).send(`잘못된 닉네임입니다, 닉네임은 영어, 숫자, "_"로만 구성이 가능합니다.`);
     }
 
@@ -36,8 +35,8 @@ const signUp = async (req, res) => {
         return res.status(409).send("이미 존재하는 휴대폰 번호의 계정이 있습니다.");
     }
     //첫 시작이010으로 시작하는지 확인, \d 숫자인지 확인 후 8자리로 입력되었는지 확인
-    const CheckVaildatorPhoneNumber = /^010\d{8}$/;
-    if (!phoneNumber || !CheckVaildatorPhoneNumber.test(phoneNumber)) {
+    const CheckValidatorPhoneNumber = /^010\d{8}$/;
+    if (!phoneNumber || !CheckValidatorPhoneNumber.test(phoneNumber)) {
         return res.status(400).send("잘못된 휴대폰 번호를 입력하셨습니다, 010으로 시작하는 정확한 휴대폰번호 11자리를 입력해주시기 바랍니다");
     }
 
