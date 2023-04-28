@@ -4,6 +4,19 @@ const { User } = require('../models');
 const signUp = async (req, res) => {
     const { name, nickname, password, phoneNumber } = req.body;
     console.log(name, nickname, password, phoneNumber);
+    // 이름 검증
+    const SpaceCheckName = /\s/; // 공백 확인용 정규식
+    if (SpaceCheckName.test(name)) {
+        return res.status(400).send("이름 안에 공백이 포함되어있습니다, 공백없이 입력바랍니다.");
+    }
+    const KoreanCheckName = /^[\uac00-\ud7af]*$/; // 한글 검수용 정규식
+    if (!KoreanCheckName.test(name)) {
+        return res.status(400).send("한글로 된 이름을 입력 바랍니다.")
+    }
+    if (!name || name.length < 2) {
+        return res.status(400).send("1글자 이상으로 된 정확한 이름을 입력해주시기 바랍니다.");
+    }
+
     // 닉네임 검증
     const CheckDuplicateNickName = await User.findOne({ attributes: ['nickname'], where: { nickname } });
     if (CheckDuplicateNickName) {
@@ -12,7 +25,7 @@ const signUp = async (req, res) => {
     if (!nickname || nickname.length < 3 || nickname.length > 11) {
         return res.status(400).send("닉네임을 3글자 이상 10글자 이상으로 기재해주시기 바랍니다.");
     }
-    const CheckVaildNickName = /^[a-zA-Z0-9_]+$/; //
+    const CheckVaildNickName = /^[a-zA-Z0-9_]+$/; // 영어,숫자,언더스코어만 입력가능하게하는 정규식
     if (!CheckVaildNickName.test(nickname)) {
         return res.status(400).send(`잘못된 닉네임입니다, 닉네임은 영어, 숫자, "_"로만 구성이 가능합니다.`);
     }
