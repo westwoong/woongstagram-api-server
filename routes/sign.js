@@ -40,6 +40,41 @@ const signUp = async (req, res) => {
         return res.status(400).send("잘못된 휴대폰 번호를 입력하셨습니다, 010으로 시작하는 정확한 휴대폰번호 11자리를 입력해주시기 바랍니다");
     }
 
+    // 비밀번호 검증
+    if (!password || password.length < 9) {
+        return res.status(400).send('비밀번호는 최소 9자리 이상 입력');
+    }
+
+    let PasswordVaild = 0;
+    const CheckLowerCase = /[a-z]/g;
+    if (CheckLowerCase.test(password)) {
+        PasswordVaild++;
+    }
+    console.log(PasswordVaild);
+
+    const CheckUpperCase = /[A-Z]/g;
+    if (CheckUpperCase.test(password)) {
+        PasswordVaild++;
+    }
+    console.log(PasswordVaild);
+
+    const CheckNummberCase = /[0-9]/g;
+    if (CheckNummberCase.test(password)) {
+        PasswordVaild++;
+    }
+    console.log(PasswordVaild);
+
+    //특수기호 확인
+    const CheckSpesialCase = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g;
+    if (CheckSpesialCase.test(password)) {
+        PasswordVaild++;
+    }
+    console.log(PasswordVaild);
+
+    if (PasswordVaild < 3) {
+        return res.status(400).send('비밀번호는 영대문자, 영소문자, 숫자, 특수문자 중 3가지 이상이 포함되어있어야합니다')
+    }
+
     return res.status(201).send("회원가입 테스트 성공");
 }
 
