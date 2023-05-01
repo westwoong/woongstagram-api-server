@@ -1,5 +1,7 @@
 const { User } = require('../models');
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+require('dotenv').config('../.env');
 const express = require('express');
 const signRoute = express.Router();
 
@@ -96,6 +98,44 @@ signRoute.post('/sign-up', async (req, res) => {
         console.log(err);
         return res.status(500).send("오류가 발생하였습니다 관리자에게 문의 바랍니다.");
     }
+});
+
+signRoute.post('/sign-in', async (req, res) => {
+    const { phoneNumber, password } = req.body;
+    console.log(phoneNumber, password);
+
+    const UserCheckExist = await User.findOne({ attributes: ['phone_number'], where: { phoneNumber } });
+    if (!UserCheckExist) {
+        return res.status(400).send('존재하지 않는 계정입니다.');
+    }
+
+    // 사용자 정보 sequelize 형식으로 조회
+    const CheckUserSalt = await User.findAll({ attributes: ['salt'], where: { phoneNumber } });
+    const CheckUserPassword = await User.findAll({ attributes: ['password'], where: { phoneNumber } });
+
+    // sequelize형식으로 조회된 정보 값으로만 분리 진행
+    const salt = CheckUserSalt.map(row => row.salt).join();
+    const storedHashedPassword = CheckUserPassword.map(row => row.password).join();
+
+    // 비밀번호가 일치한지 확인
+    crypto.pbkdf2(password, salt, 105820, 64, 'SHA512', async (err, buffer) => {
+        // password, salt 값을 인자로 받아서 입력받은 비밀번호를 다시 암호화 생성
+        const hashedPassword = buffer.toString('base64');
+
+        // 입력받은 계정의 PK 값 확인
+        const UserPkValue = await User.findAll({ attributes: ['id'], where: { phoneNumber } });
+
+        // 찾은 PK 값 payload.id 에 할당하기.
+        const payload = { id: UserPkValue }
+        const token = jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "60d" });
+
+        // 입력한 비밀번호화 DB에 있는 정보가 동일한지 확인
+        if (hashedPassword === storedHashedPassword) {
+            return res.status(200).send({ token });
+        } else {
+            return res.status(400).send("비밀번호가 틀렸습니다.");
+        }
+    });
 });
 
 module.exports = signRoute;
