@@ -18,8 +18,8 @@ const User = sequelize.define('users', {
         unique: true,
         comment: "사용자 닉네임"
     },
-    phone: {
-        type: DataTypes.INTEGER,
+    phoneNumber: {
+        type: DataTypes.STRING,
         allowNull: false,
         unique: true,
         comment: "사용자 휴대폰 번호(계정)"
