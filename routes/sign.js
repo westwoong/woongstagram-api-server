@@ -107,6 +107,7 @@ signRoute.post('/sign-in', async (req, res) => {
     if (!UserCheckExist) {
         return res.status(400).send('존재하지 않는 계정입니다.');
     }
+
     // 사용자 정보 sequelize 형식으로 조회
     const CheckUserSalt = await User.findAll({ attributes: ['salt'], where: { phoneNumber } });
     const CheckUserPassword = await User.findAll({ attributes: ['password'], where: { phoneNumber } });
@@ -120,10 +121,13 @@ signRoute.post('/sign-in', async (req, res) => {
         // password, salt 값을 인자로 받아서 입력받은 비밀번호를 다시 암호화 생성
         const hashedPassword = buffer.toString('base64');
 
-        // 입력한 비밀번호를 암호화했을때 값 확인.
-        console.log(hashedPassword);
+        // 입력한 비밀번호화 DB에 있는 정보가 동일한지 확인
+        if (hashedPassword === storedHashedPassword) {
+            return res.status(200).send("로그인 성공!");
+        } else {
+            return res.status(400).send("비밀번호가 틀렸습니다.");
+        }
     });
-    res.status(200).send('로그인 성공!');
 });
 
 module.exports = signRoute;
