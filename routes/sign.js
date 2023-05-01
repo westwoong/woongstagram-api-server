@@ -1,6 +1,7 @@
 const { User } = require('../models');
 const crypto = require('crypto');
-
+const jwt = require('jsonwebtoken');
+require('dotenv').config('../.env');
 const express = require('express');
 const signRoute = express.Router();
 
@@ -121,9 +122,16 @@ signRoute.post('/sign-in', async (req, res) => {
         // password, salt 값을 인자로 받아서 입력받은 비밀번호를 다시 암호화 생성
         const hashedPassword = buffer.toString('base64');
 
+        // 입력받은 계정의 PK 값 확인
+        const UserPkValue = await User.findAll({ attributes: ['id'], where: { phoneNumber } });
+
+        // 찾은 PK 값 payload.id 에 할당하기.
+        const payload = { id: UserPkValue }
+        const token = jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "60d" });
+
         // 입력한 비밀번호화 DB에 있는 정보가 동일한지 확인
         if (hashedPassword === storedHashedPassword) {
-            return res.status(200).send("로그인 성공!");
+            return res.status(200).send({ token });
         } else {
             return res.status(400).send("비밀번호가 틀렸습니다.");
         }
