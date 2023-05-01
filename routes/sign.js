@@ -102,6 +102,14 @@ signRoute.post('/sign-up', async (req, res) => {
 signRoute.post('/sign-in', async (req, res) => {
     const { phoneNumber, password } = req.body;
     console.log(phoneNumber, password);
+
+    // 사용자 정보 sequelize 형식으로 조회
+    const CheckUserSalt = await User.findAll({ attributes: ['salt'], where: { phoneNumber } });
+    console.log(CheckUserSalt);
+    const CheckUserPassword = await User.findAll({ attributes: ['password'], where: { phoneNumber } });
+    console.log(CheckUserPassword);
+
+    res.status(200).send('로그인 성공!');
 });
 
 module.exports = signRoute;
