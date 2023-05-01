@@ -1,8 +1,8 @@
 const { User } = require('../models');
+const crypto = require('crypto');
 
 const signUp = async (req, res) => {
     const { name, nickname, password, phoneNumber } = req.body;
-    console.log(name, nickname, password, phoneNumber);
     // 이름 검증
     const SpaceCheckName = /\s/; // 공백 확인용 정규식
     if (SpaceCheckName.test(name)) {
@@ -79,7 +79,21 @@ const signUp = async (req, res) => {
         return res.status(400).send('비밀번호에 연속된 휴대폰번호가 포함되어있으면 안됩니다!');
     }
 
-    return res.status(201).send("회원가입 테스트 성공");
+    // 비밀번호 암호화
+    try {
+        crypto.randomBytes(64, (err, buffer) => {
+            const salt = buffer.toString('base64'); // 랜덤값 문자열변환 및 변수 할당
+            crypto.pbkdf2(password, salt, 105820, 64, 'SHA512', async (err, buffer) => {
+                const hashedPassword = buffer.toString('base64'); // 암호화 비밀번호 생성
+
+                await User.create({ phoneNumber, name, nickname, salt, password: hashedPassword });
+                res.status(201).send(`회원가입이 완료되었습니다\n${nickname} 님의 아이디는 ${phoneNumber} 입니다.`);
+            });
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).send("오류가 발생하였습니다 관리자에게 문의 바랍니다.");
+    }
 }
 
 module.exports = signUp;
