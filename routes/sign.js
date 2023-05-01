@@ -50,29 +50,33 @@ const signUp = async (req, res) => {
     if (CheckLowerCase.test(password)) {
         PasswordVaild++;
     }
-    console.log(PasswordVaild);
 
     const CheckUpperCase = /[A-Z]/g;
     if (CheckUpperCase.test(password)) {
         PasswordVaild++;
     }
-    console.log(PasswordVaild);
 
     const CheckNummberCase = /[0-9]/g;
     if (CheckNummberCase.test(password)) {
         PasswordVaild++;
     }
-    console.log(PasswordVaild);
 
     //특수기호 확인
     const CheckSpesialCase = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/g;
     if (CheckSpesialCase.test(password)) {
         PasswordVaild++;
     }
-    console.log(PasswordVaild);
 
     if (PasswordVaild < 3) {
         return res.status(400).send('비밀번호는 영대문자, 영소문자, 숫자, 특수문자 중 3가지 이상이 포함되어있어야합니다')
+    }
+
+    const CheckPhoneNumberInPassword =
+        password.includes(phoneNumber.slice(3, 7)) ||
+        password.includes(phoneNumber.slice(-4));
+
+    if (CheckPhoneNumberInPassword) {
+        return res.status(400).send('비밀번호에 연속된 휴대폰번호가 포함되어있으면 안됩니다!');
     }
 
     return res.status(201).send("회원가입 테스트 성공");
