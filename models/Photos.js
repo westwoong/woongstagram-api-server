@@ -1,17 +1,17 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-const Post = sequelize.define('posts', {
+const Photo = sequelize.define('photos', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
     },
-    content: {
+    url: {
         type: DataTypes.STRING,
         allowNull: false,
-        comment: "게시글 내용"
+        comment: "이미지 업로드 주소"
     }
 })
 
-module.exports = Post;
+module.exports = Photo;
