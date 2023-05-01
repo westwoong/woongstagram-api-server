@@ -111,6 +111,14 @@ signRoute.post('/sign-in', async (req, res) => {
     const salt = CheckUserSalt.map(row => row.salt).join();
     const storedHashedPassword = CheckUserPassword.map(row => row.password).join();
 
+    // 비밀번호가 일치한지 확인
+    crypto.pbkdf2(password, salt, 105820, 64, 'SHA512', async (err, buffer) => {
+        // password, salt 값을 인자로 받아서 입력받은 비밀번호를 다시 암호화 생성
+        const hashedPassword = buffer.toString('base64');
+
+        // 입력한 비밀번호를 암호화했을때 값 확인.
+        console.log(hashedPassword);
+    });
     res.status(200).send('로그인 성공!');
 });
 
