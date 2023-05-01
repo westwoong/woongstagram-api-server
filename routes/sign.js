@@ -103,6 +103,10 @@ signRoute.post('/sign-in', async (req, res) => {
     const { phoneNumber, password } = req.body;
     console.log(phoneNumber, password);
 
+    const UserCheckExist = await User.findOne({ attributes: ['phone_number'], where: { phoneNumber } });
+    if (!UserCheckExist) {
+        return res.status(400).send('존재하지 않는 계정입니다.');
+    }
     // 사용자 정보 sequelize 형식으로 조회
     const CheckUserSalt = await User.findAll({ attributes: ['salt'], where: { phoneNumber } });
     const CheckUserPassword = await User.findAll({ attributes: ['password'], where: { phoneNumber } });
