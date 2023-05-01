@@ -1,5 +1,6 @@
 const { User } = require('../models');
 const crypto = require('crypto');
+
 const express = require('express');
 const signRoute = express.Router();
 
@@ -96,6 +97,11 @@ signRoute.post('/sign-up', async (req, res) => {
         console.log(err);
         return res.status(500).send("오류가 발생하였습니다 관리자에게 문의 바랍니다.");
     }
+});
+
+signRoute.post('/sign-in', async (req, res) => {
+    const { phoneNumber, password } = req.body;
+    console.log(phoneNumber, password);
 });
 
 module.exports = signRoute;
