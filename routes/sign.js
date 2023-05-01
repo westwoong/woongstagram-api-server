@@ -105,9 +105,11 @@ signRoute.post('/sign-in', async (req, res) => {
 
     // 사용자 정보 sequelize 형식으로 조회
     const CheckUserSalt = await User.findAll({ attributes: ['salt'], where: { phoneNumber } });
-    console.log(CheckUserSalt);
     const CheckUserPassword = await User.findAll({ attributes: ['password'], where: { phoneNumber } });
-    console.log(CheckUserPassword);
+
+    // sequelize형식으로 조회된 정보 값으로만 분리 진행
+    const salt = CheckUserSalt.map(row => row.salt).join();
+    const storedHashedPassword = CheckUserPassword.map(row => row.password).join();
 
     res.status(200).send('로그인 성공!');
 });
