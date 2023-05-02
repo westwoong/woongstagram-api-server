@@ -1,12 +1,14 @@
-const { Post } = require('../models');
+const { Post, Photo } = require('../models');
 const express = require('express');
 const postsRoute = express.Router();
 
 postsRoute.post('/', async (req, res) => {
-    const { content } = req.body;
+    const { content, photos } = req.body;
     try {
-        const createPost = await Post.create({ content });
-        res.status(201).json(createPost);
+        const createPost = await Post.create({ content })
+        console.log(createPost.id);
+        const createPhotos = await Photo.create({ url: photos, post_id: createPost.id });
+        res.status(201).json({ createPost, createPhotos });
 
     } catch (err) {
         console.error(err);
