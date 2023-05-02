@@ -4,6 +4,18 @@ const postsRoute = express.Router();
 
 postsRoute.post('/', async (req, res) => {
     const { content, photos } = req.body;
+    if (!content) {
+        return res.status(400).send('본문의 내용을 입력해 주시기 바랍니다.');
+    }
+    if (content.length > 1000) {
+        return res.status(400).send('본문의 내용은 최대 1000자 까지 입력이 가능합니다.');
+    }
+    if (!photos) {
+        return res.status(400).send('사진은 반드시 1장 이상 첨부해 주시기 바랍니다.');
+    }
+    if (photos.length > 10) {
+        return res.status(400).send('사진은 최대 10장 까지 첨부가 가능합니다.');
+    }
     try {
         const createPost = await Post.create({ content })
         console.log(createPost.id);
