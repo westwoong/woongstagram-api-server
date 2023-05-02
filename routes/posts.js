@@ -17,10 +17,11 @@ postsRoute.post('/', async (req, res) => {
         return res.status(400).send('사진은 최대 10장 까지 첨부가 가능합니다.');
     }
     try {
-        const createPost = await Post.create({ content })
-        console.log(createPost.id);
-        const createPhotos = await Photo.create({ url: photos, postId: createPost.id });
-        res.status(201).json({ createPost, createPhotos });
+        const createPost = await Post.create({ content, userId: 1 })
+        for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
+            await Photo.create({ url: photos[PhotoArrayLength], postId: createPost.id });
+        }
+        res.status(201).json({ createPost });
 
     } catch (err) {
         console.error(err);
