@@ -1,10 +1,23 @@
 const { Post, Photo } = require('../models');
 const express = require('express');
 const postsRoute = express.Router();
+const multer = require('multer');
 
-postsRoute.post('/', async (req, res) => {
-    const { content, photos } = req.body;
-    if (!content) {
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'images/');
+    },
+    filename: function (req, file, cb) {
+        cb(null, 'posts_image-' + Date.now() + file.originalname);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+postsRoute.post('/', upload.array('photos'), async (req, res) => {
+    const { content } = req.body;
+    const photos = req.files;
+    if (!content || content.length === 0) {
         return res.status(400).send('본문의 내용을 입력해 주시기 바랍니다.');
     }
     if (content.length > 1000) {
@@ -19,7 +32,7 @@ postsRoute.post('/', async (req, res) => {
     try {
         const createPost = await Post.create({ content, userId: 1 })
         for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
-            await Photo.create({ url: photos[PhotoArrayLength], sequence: PhotoArrayLength, postId: createPost.id });
+            await Photo.create({ url: photos[PhotoArrayLength].filename, sequence: PhotoArrayLength, postId: createPost.id });
         }
         res.status(201).json({ createPost });
 
