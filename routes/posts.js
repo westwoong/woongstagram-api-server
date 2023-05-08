@@ -12,11 +12,33 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage });
+const fileFilter = (req, file, cb) => {
+    const allowTypes = /jpg|png|gif/;
+    const filename = file.originalname;
+    console.log(filename);
+    const checkTypes = filename.slice(-3);
+    console.log(checkTypes);
+    const validTypes = allowTypes.test(checkTypes);
+    console.log(validTypes);
+    if (!validTypes) {
+        return cb(new Error('파일의 확장자는 jpg, png, gif 만 가능합니다'));
+    }
+    cb(null, true);
+}
+
+const upload = multer({
+    storage,
+    fileFilter
+});
+
+
+
 
 postsRoute.post('/', upload.array('photos'), async (req, res) => {
     const { content } = req.body;
+    console.log(content);
     const photos = req.files;
+    console.log(photos)
     if (!content || content.length === 0) {
         return res.status(400).send('본문의 내용을 입력해 주시기 바랍니다.');
     }
