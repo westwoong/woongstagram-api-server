@@ -19,7 +19,7 @@ postsRoute.post('/', async (req, res) => {
     try {
         const createPost = await Post.create({ content, userId: 1 })
         for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
-            await Photo.create({ url: photos[PhotoArrayLength], postId: createPost.id });
+            await Photo.create({ url: photos[PhotoArrayLength], sequence: PhotoArrayLength, postId: createPost.id });
         }
         res.status(201).json({ createPost });
 
