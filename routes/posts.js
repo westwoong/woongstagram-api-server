@@ -14,24 +14,18 @@ const storage = multer.diskStorage({
     }
 });
 
-const fileFilter = (req, file, cb, err) => {
-    try {
-        const allowTypes = /jpg|png|gif/;
-        const filename = file.originalname;
-        const checkTypes = filename.slice(-3);
-        const validTypes = allowTypes.test(checkTypes);
-        if (!validTypes) {
-            return cb(new Error('파일의 확장자는 jpg, png, gif 만 가능합니다'), false);
-        }
-        const maxFileSize = 20000000; // 20MB
-        if (file.size > maxFileSize) {
-            cb(new Error('사진이 너무커요'), false);
-        }
-    } catch (err) {
-        console.log(err);
-        res.status(400).send(err);
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg' || file.mimetype == 'image/png' || file.mimetype == 'image/gif') {
+        cb(null, true);
+    } else {
+        return cb(new Error('파일의 확장자는 jpg, png, gif 만 가능합니다'), false);
     }
-    cb(null, true);
+    const maxFileSize = 20000000; // 20MB
+    if (file.size > maxFileSize) {
+        return cb(new Error('파일의 용량은 20mb까지 업로드가 가능하비다.'));
+    } else {
+        cb(null, true);
+    }
 }
 
 const upload = multer({
