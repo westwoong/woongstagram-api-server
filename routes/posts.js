@@ -2,8 +2,7 @@ const { Post, Photo } = require('../models');
 const express = require('express');
 const postsRoute = express.Router();
 const multer = require('multer');
-const jwt = require('jsonwebtoken');
-require('dotenv').config('../.env');
+const Authorization = require('../middleware/jsontoken');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -35,9 +34,7 @@ const upload = multer({
 }).array('photos', 10);
 
 
-
-
-postsRoute.post('/', upload, async (req, res, next) => {
+postsRoute.post('/', Authorization, upload, async (req, res, next) => {
     const { content } = req.body;
     const photos = req.files;
 
@@ -54,31 +51,7 @@ postsRoute.post('/', upload, async (req, res, next) => {
         return res.status(400).send('사진은 최대 10장 까지 첨부가 가능합니다.');
     }
 
-    const authHeader = req.headers.authorization;
-    console.log(req.headers.authorization);
-    if (authHeader === undefined) {
-        return res.status(400).send('로그인을 해주시기 바랍니다.');
-    }
-    let token = authHeader.substring(7, authHeader.length); // Bearer 뒤에 process.env.JSON_SECRETKEY 값 가져오는 substring메소드
-    let payload;
-
-    try {
-        payload = jwt.verify(token, process.env.JSON_SECRETKEY);
-    } catch (err) {
-        if (err.message === "invalid signature") {
-            console.log(err.message);
-            return res.status(401).send("잘못된 토큰입니다.");
-        }
-        if (err.message === "jwt expired") {
-            console.log(err.message);
-            return res.status(401).send("유효기간이 만료된 토큰입니다.");
-        }
-        else {
-            console.log(err);
-            return res.status(500).send("로그인에러가 발생하였습니다 다시 로그인해주시기 바랍니다.");
-        }
-    }
-    const payloadArray = payload.id[0]; // payload.id 객체에 있는 id값만 받아오는 변수
+    const payloadArray = req.user[0];
     console.log(payloadArray.id);
     try {
         const createPost = await Post.create({ content, userId: payloadArray.id });
