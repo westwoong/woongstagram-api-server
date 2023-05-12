@@ -24,6 +24,11 @@ const User = sequelize.define('users', {
         unique: true,
         comment: "사용자 휴대폰 번호(계정)"
     },
+    refreshToken: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: "refresh token"
+    },
     password: {
         type: DataTypes.STRING,
         allowNull: false,
