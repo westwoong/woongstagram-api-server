@@ -1,43 +1,11 @@
-const { Post, Photo } = require('../models');
+const { Post } = require('../models');
 const express = require('express');
 const postsRoute = express.Router();
 const multer = require('multer');
 const Authorization = require('../middleware/jsontoken');
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'images/');
-    },
-    filename: function (req, file, cb) {
-        cb(null, 'posts_image-' + Date.now() + file.originalname);
-    }
-});
-
-const fileFilter = (req, file, cb) => {
-    if (file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg' || file.mimetype == 'image/png' || file.mimetype == 'image/gif') {
-        cb(null, true);
-    } else {
-        return cb(new Error('파일의 확장자는 jpg, png, gif 만 가능합니다'), false);
-    }
-    const maxFileSize = 20000000; // 20MB
-    if (file.size > maxFileSize) {
-        return cb(new Error('파일의 용량은 20mb까지 업로드가 가능하비다.'));
-    } else {
-        cb(null, true);
-    }
-}
-
-const upload = multer({
-    storage,
-    limits: { fileSize: 20000000 }, // byte 단위, 20Mb
-    fileFilter
-}).array('photos', 10);
-
-
-postsRoute.post('/', Authorization, upload, async (req, res, next) => {
+postsRoute.post('/', Authorization, async (req, res, next) => {
     const { content } = req.body;
-    const photos = req.files;
-
     if (!content || content.length === 0) {
         return res.status(400).send('본문의 내용을 입력해 주시기 바랍니다.');
     }
@@ -55,9 +23,6 @@ postsRoute.post('/', Authorization, upload, async (req, res, next) => {
     console.log(payloadArray.id);
     try {
         const createPost = await Post.create({ content, userId: payloadArray.id });
-        for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
-            await Photo.create({ url: photos[PhotoArrayLength].filename, sequence: PhotoArrayLength, postId: createPost.id });
-        }
         res.status(201).json({ createPost });
 
     } catch (err) {
