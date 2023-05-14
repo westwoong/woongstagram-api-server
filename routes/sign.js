@@ -127,11 +127,18 @@ signRoute.post('/sign-in', async (req, res) => {
 
         // 찾은 PK 값 payload.id 에 할당하기.
         const payload = { id: UserPkValue }
-        const token = jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "60d" });
+        const accessToken = jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "2h" });
+        const refreshToken = jwt.sign(payload, process.env.REFRESH_SECRETKEY, { expiresIn: "60d" });
+
+        //PK 값만 추출
+        const realPrimayKey = payload.id[0].dataValues.id;
+        console.log(realPrimayKey);
 
         // 입력한 비밀번호화 DB에 있는 정보가 동일한지 확인
         if (hashedPassword === storedHashedPassword) {
-            return res.status(200).send({ token });
+            //refresh_token 값 DB 저장
+            await User.update({ refreshToken }, { where: { id: realPrimayKey } });
+            return res.status(200).send({ accessToken });
         } else {
             return res.status(400).send("비밀번호가 틀렸습니다.");
         }

@@ -1,3 +1,6 @@
+### image dir ###
+images/
+
 ### docker ###
 Dockfile
 Docker-compose.yml

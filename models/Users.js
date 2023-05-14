@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { sequelize } = require('../config/database');
 
 const User = sequelize.define('users', {
     id: {
@@ -23,6 +23,11 @@ const User = sequelize.define('users', {
         allowNull: false,
         unique: true,
         comment: "사용자 휴대폰 번호(계정)"
+    },
+    refreshToken: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        comment: "refresh token"
     },
     password: {
         type: DataTypes.STRING,
