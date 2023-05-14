@@ -9,7 +9,8 @@ const storage = multer.diskStorage({
         cb(null, 'images/');
     },
     filename: function (req, file, cb) {
-        cb(null, 'posts_image-' + Date.now() + file.originalname);
+        // cb(null, 'posts_image-' + Date.now() + file.originalname);
+        cb(null, file.originalname);
     }
 });
 
@@ -21,14 +22,12 @@ const fileFilter = (req, file, cb) => {
     if (photos.length > 10) {
         return res.status(400).send('사진은 최대 10장 까지 첨부가 가능합니다.');
     }
-    if (file.mimetype == 'image/jpg' || file.mimetype == 'image/jpeg' || file.mimetype == 'image/png' || file.mimetype == 'image/gif') {
-        cb(null, true);
-    } else {
+    if (!file.mimetype == 'image/jpg' || !file.mimetype == 'image/jpeg' || !file.mimetype == 'image/png' || !file.mimetype == 'image/gif') {
         return cb(new Error('파일의 확장자는 jpg, png, gif 만 가능합니다'), false);
     }
     const maxFileSize = 20000000; // 20MB
     if (file.size > maxFileSize) {
-        return cb(new Error('파일의 용량은 20mb까지 업로드가 가능하비다.'));
+        return cb(new Error('파일의 용량은 20mb까지 업로드가 가능하비다.'), false);
     } else {
         cb(null, true);
     }
@@ -45,9 +44,9 @@ uploadRoute.post("/", Authorization, upload, async (req, res) => {
 
     try {
         for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
-            await Photo.create({ url: `http://localhost:3000/images/${photos[PhotoArrayLength].filename}`, sequence: PhotoArrayLength, postId: 1 });
+            await Photo.create({ url: `http://localhost:3000/images/${photos[PhotoArrayLength].filename}`, sequence: PhotoArrayLength });
         }
-        res.status(201).send('사진이 정상적으로 업로드 되었습니다');
+        res.status(201).json(photos);
 
     } catch (err) {
         console.error(err);
