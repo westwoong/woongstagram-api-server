@@ -8,8 +8,8 @@ User.hasMany(Post, NullFalse);;
 Post.belongsTo(User, NullFalse);
 Post.hasMany(Comment, NullFalse);
 User.hasMany(Comment, NullFalse);
-Post.hasMany(Photo, NullFalse);
-Photo.belongsTo(Post, NullFalse);
+Post.hasMany(Photo);
+Photo.belongsTo(Post);
 Comment.belongsTo(Post, NullFalse);
 Comment.belongsTo(User, NullFalse);
 
