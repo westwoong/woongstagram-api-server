@@ -1,4 +1,5 @@
 const { Post, Photo } = require('../models');
+const { sequelize, transaction } = require('../config/database');
 const express = require('express');
 const postsRoute = express.Router();
 const Authorization = require('../middleware/jsontoken');
@@ -19,23 +20,21 @@ postsRoute.post('/', Authorization, async (req, res, next) => {
 
     const payloadArray = req.user[0];
     console.log(payloadArray.id);
+    const t = await transaction;
 
     try {
-
-        for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
-            const checkPhotoUrl = await Photo.findAll({ attributes: ['url'], where: { url: photos[PhotoArrayLength] } });
-            console.log('--------1---------');
-            console.log(checkPhotoUrl);
-            console.log('--------1---------');
-            if (checkPhotoUrl.length === 0) {  // 이미지가 없을시? 배열의 값이 [] 로 출력되어 길이로 변경
-                return res.status(404).send(`${photos[PhotoArrayLength]}해당 이미지는 존재하지 않습니다.`);
+        const test123 = await sequelize.transaction(async (t) => {
+            const createPost = await Post.create({ content, userId: payloadArray.id }, { transaction: t });
+            for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
+                const checkPhotoUrl = await Photo.findAll({ attributes: ['url'], where: { url: photos[PhotoArrayLength] } });
+                if (checkPhotoUrl.length === 0) {  // 이미지가 없을시? 배열의 값이 [] 로 출력되어 길이로 변경
+                    return res.status(404).send(`${photos[PhotoArrayLength]}해당 이미지는 존재하지 않습니다.`);
+                }
+                await Photo.update({ postId: createPost.id }, { where: { url: photos[PhotoArrayLength] } }, { transaction: t });
             }
-        }
-        //  else {
-        const createPost = await Post.create({ content, userId: payloadArray.id });
-        return res.status(201).json({ createPost });
-        // }
-
+            return createPost;
+        });
+        return res.status(201).json({ post: test123 });
     } catch (err) {
         console.error(err);
         return res.status(500).send('알 수 없는 오류가 발생하였습니다 관리자에게 문의 바랍니다.')
