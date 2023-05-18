@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { sequelize } = require('../config/database');
 
 const Photo = sequelize.define('photos', {
     id: {
@@ -11,6 +11,11 @@ const Photo = sequelize.define('photos', {
         type: DataTypes.STRING,
         allowNull: false,
         comment: "이미지 업로드 주소"
+    },
+    sequence: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        comment: "이미지 순서"
     }
 })
 

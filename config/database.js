@@ -10,6 +10,8 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
     }
 });
 
+const transaction = sequelize.transaction();
+
 const dbConnecting = async () => {
     try {
         await sequelize.authenticate();
@@ -23,4 +25,4 @@ const dbConnecting = async () => {
 
 dbConnecting();
 
-module.exports = sequelize;
+module.exports = { sequelize, transaction };
