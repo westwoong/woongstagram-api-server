@@ -1,5 +1,5 @@
 const { Post, Photo } = require('../models');
-const { sequelize, transaction } = require('../config/database');
+const { sequelize } = require('../config/database');
 const express = require('express');
 const postsRoute = express.Router();
 const Authorization = require('../middleware/jsontoken');
@@ -20,7 +20,6 @@ postsRoute.post('/', Authorization, async (req, res, next) => {
 
     const payloadArray = req.user[0];
     console.log(payloadArray.id);
-    const t = await transaction;
 
     try {
         // sequelize 트랜잭션 매서드
@@ -29,9 +28,6 @@ postsRoute.post('/', Authorization, async (req, res, next) => {
 
             const photoPromise = photos.map(async (photosUrl) => {
                 const checkPhotoUrl = await Photo.findOne({ where: { url: photosUrl } }); // map array에 담겨있는 URL를 찾는 변수
-                console.log('----------------------')
-                console.log(checkPhotoUrl);
-                console.log('----------------------')
                 if (!checkPhotoUrl) {
                     // map array에 없는게 있을경우 캐치하여 해당 배열 URL반환
                     return res.status(404).send(`${photosUrl}해당 이미지는 존재하지 않습니다.`);
