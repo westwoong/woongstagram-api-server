@@ -4,8 +4,9 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config('../.env');
 const express = require('express');
 const signRoute = express.Router();
+const ErrorCatch = require('../middleware/trycatch');
 
-signRoute.post('/sign-up', async (req, res) => {
+signRoute.post('/sign-up', ErrorCatch(async (req, res) => {
     const { name, nickname, password, phoneNumber } = req.body;
     // 이름 검증
     const SpaceCheckName = /\s/; // 공백 확인용 정규식
@@ -84,23 +85,18 @@ signRoute.post('/sign-up', async (req, res) => {
     }
 
     // 비밀번호 암호화
-    try {
-        crypto.randomBytes(64, (err, buffer) => {
-            const salt = buffer.toString('base64'); // 랜덤값 문자열변환 및 변수 할당
-            crypto.pbkdf2(password, salt, 105820, 64, 'SHA512', async (err, buffer) => {
-                const hashedPassword = buffer.toString('base64'); // 암호화 비밀번호 생성
+    crypto.randomBytes(64, (err, buffer) => {
+        const salt = buffer.toString('base64'); // 랜덤값 문자열변환 및 변수 할당
+        crypto.pbkdf2(password, salt, 105820, 64, 'SHA512', async (err, buffer) => {
+            const hashedPassword = buffer.toString('base64'); // 암호화 비밀번호 생성
 
-                await User.create({ phoneNumber, name, nickname, salt, password: hashedPassword });
-                res.status(201).send(`회원가입이 완료되었습니다\n${nickname} 님의 아이디는 ${phoneNumber} 입니다.`);
-            });
+            await User.create({ phoneNumber, name, nickname, salt, password: hashedPassword });
+            res.status(201).send(`회원가입이 완료되었습니다\n${nickname} 님의 아이디는 ${phoneNumber} 입니다.`);
         });
-    } catch (err) {
-        console.log(err);
-        return res.status(500).send("오류가 발생하였습니다 관리자에게 문의 바랍니다.");
-    }
-});
+    });
+}));
 
-signRoute.post('/sign-in', async (req, res) => {
+signRoute.post('/sign-in', ErrorCatch(async (req, res) => {
     const { phoneNumber, password } = req.body;
     console.log(phoneNumber, password);
 
@@ -143,6 +139,6 @@ signRoute.post('/sign-in', async (req, res) => {
             return res.status(400).send("비밀번호가 틀렸습니다.");
         }
     });
-});
+}));
 
 module.exports = signRoute;
