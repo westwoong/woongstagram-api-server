@@ -8,6 +8,7 @@ likesRoute.post('/:postId', Authorization, ErrorCatch(async (req, res) => {
     const { postId } = req.params;
     const payloadArray = req.user[0];
     const checkLikes = await Like.findOne({ where: { postId, userId: payloadArray.id } });
+    console.log(checkLikes);
     if (checkLikes) {
         return res.status(409).send('이미 좋아요를 누른 게시글입니다.');
     }
@@ -18,7 +19,7 @@ likesRoute.post('/:postId', Authorization, ErrorCatch(async (req, res) => {
 likesRoute.delete('/:postId', Authorization, ErrorCatch(async (req, res) => {
     const { postId } = req.params;
     const payloadArray = req.user[0];
-    await Like.create({ userId: payloadArray.id, postId });
+    await Like.destroy({ where: { userId: payloadArray.id, postId } });
     res.status(204).send();
 }));
 
