@@ -17,5 +17,17 @@ commentsRoute.post('/:postId', Authorization, ErrorCatch(async (req, res, next) 
     return res.status(201).send('작성이 완료되었습니다');
 }));
 
+commentsRoute.patch('/:postId/:commentId', Authorization, ErrorCatch(async (req, res, next) => {
+    const { postId, commentId } = req.params;
+    const { comment } = req.body;
+    if (!comment || comment.length > 100) {
+        return res.status(400).send('댓글의 내용은 1글자 이상 100글자 이하로 작성이 가능합니다');
+    }
+    const payloadArray = req.user[0];
+
+    await Comment.update({ content: comment }, { where: { id: commentId, userId: payloadArray.id, postId } });
+    return res.status(201).send('수정이 완료되었습니다');
+}));
+
 
 module.exports = commentsRoute;
