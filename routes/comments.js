@@ -29,5 +29,24 @@ commentsRoute.patch('/:postId/:commentId', Authorization, ErrorCatch(async (req,
     return res.status(201).send('수정이 완료되었습니다');
 }));
 
+commentsRoute.delete('/:postId/:commentId', Authorization, ErrorCatch(async (req, res, next) => {
+    const { postId, commentId } = req.params;
+    const payloadArray = req.user[0];
+
+    const usercheck = await Comment.findOne({ where: { id: commentId, userId: payloadArray.id, postId } });
+    console.log(usercheck);
+    console.log('-----userid check-----');
+    console.log(usercheck.userId);
+    console.log('------------');
+
+
+    if (usercheck.userId !== payloadArray.id) {
+        return res.status(403).send('본인이 작성한 댓글만 삭제가 가능합니다');
+    }
+
+    await Comment.destroy({ where: { id: commentId, userId: payloadArray.id, postId } });
+    return res.status(201).send('댓글 삭제가 완료되었습니다');
+}));
+
 
 module.exports = commentsRoute;
