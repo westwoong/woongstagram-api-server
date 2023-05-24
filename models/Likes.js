@@ -2,18 +2,14 @@ const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
 
-const Comment = sequelize.define('comments', {
+const Like = sequelize.define('likes', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
     },
-    content: {
-        type: DataTypes.STRING,
-        allowNull: false
-    }
 
 })
 
 
-module.exports = Comment;
+module.exports = Like;

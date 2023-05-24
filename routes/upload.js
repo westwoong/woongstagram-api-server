@@ -3,6 +3,7 @@ const express = require('express');
 const uploadRoute = express.Router();
 const multer = require('multer');
 const Authorization = require('../middleware/jsontoken');
+const ErrorCatch = require('../middleware/trycatch');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -39,20 +40,15 @@ const upload = multer({
     fileFilter
 }).array('photos', 10);
 
-uploadRoute.post("/", Authorization, upload, async (req, res) => {
+uploadRoute.post("/", Authorization, upload, ErrorCatch(async (req, res) => {
     const photos = req.files;
 
-    try {
-        for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
-            await Photo.create({ url: `http://localhost:3000/images/${photos[PhotoArrayLength].filename}`, sequence: PhotoArrayLength });
-        }
-        res.status(201).json(photos);
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('알 수 없는 오류가 발생하였습니다 관리자에게 문의 바랍니다.')
+    for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
+        await Photo.create({ url: `http://localhost:3000/images/${photos[PhotoArrayLength].filename}`, sequence: PhotoArrayLength });
     }
-})
+    res.status(201).json(photos);
+
+}));
 
 
 module.exports = uploadRoute;
