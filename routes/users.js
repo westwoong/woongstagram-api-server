@@ -22,4 +22,20 @@ usersRoute.get('/myfollower', Authorization, ErrorCatch(async (req, res, next) =
     return res.status(200).send({ followers: followerList });
 }));
 
+usersRoute.get('/myfollowing', Authorization, ErrorCatch(async (req, res, next) => {
+    const userId = req.user[0].id;
+    const findMyFollow = await Follower.findAll({ where: { followerId: userId } });
+    const followingList = [];
+
+    for (const following of findMyFollow) {
+        const followingUser = await User.findOne({
+            where: { id: following.followId },
+            attributes: ['nickname', 'name']
+        });
+        const { nickname, name } = followingUser;
+        followingList.push({ nickname, name });
+    }
+    return res.status(200).send({ followings: followingList });
+}));
+
 module.exports = usersRoute;
