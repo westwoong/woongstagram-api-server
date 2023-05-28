@@ -3,6 +3,7 @@ const Post = require('./Posts');
 const Photo = require('./Photos');
 const Comment = require('./Comments');
 const Like = require('./Likes');
+const Follower = require('./Follower');
 const NullFalse = { foreignKey: { allowNull: false } };
 
 User.hasMany(Post, NullFalse);;
@@ -24,10 +25,26 @@ Like.belongsTo(Post, NullFalse);
 Post.hasMany(Photo);
 Photo.belongsTo(Post);
 
+User.hasMany(Follower, {
+    foreignKey: {
+        allowNull: false,
+        name: 'followerId',
+        comment: '구독자'
+    }
+});
+User.hasMany(Follower, {
+    foreignKey: {
+        allowNull: false,
+        name: 'followId',
+        comment: '사용자'
+    }
+});
+
 module.exports = {
     User,
     Post,
     Photo,
     Comment,
-    Like
+    Like,
+    Follower
 }
