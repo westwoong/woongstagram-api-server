@@ -23,7 +23,7 @@ commentsRoute.patch('/:commentId', Authorization, ErrorCatch(async (req, res, ne
     const userId = req.user[0].id;
     const foundComment = await Comment.findOne({ where: { id: commentId } });
 
-    if (foundComment?.userId !== userId || foundComment === nul) {
+    if (foundComment?.userId !== userId || foundComment === null) {
         return res.status(403).send('본인의 댓글만 수정이 가능합니다');
     }
 
