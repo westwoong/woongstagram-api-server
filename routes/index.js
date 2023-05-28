@@ -3,7 +3,8 @@ const signRouter = require('./sign');
 const uploadRouter = require('./upload');
 const likesRouter = require('./likes');
 const commentsRouter = require('./comments');
-const followsRoute = require('./follow');
+const followsRouter = require('./follow');
+const usersRoute = require('./users');
 
 const routes = (app) => {
     app.use('/auth', signRouter);
@@ -11,7 +12,8 @@ const routes = (app) => {
     app.use('/images', uploadRouter);
     app.use('/likes', likesRouter);
     app.use('/comments', commentsRouter);
-    app.use('/follows', followsRoute);
+    app.use('/follows', followsRouter);
+    app.use('/users', usersRoute);
 }
 
 module.exports = routes;
