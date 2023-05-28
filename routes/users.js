@@ -1,4 +1,4 @@
-const { User, Follower } = require('../models');
+const { User, Follower, Post } = require('../models');
 const express = require('express');
 const usersRoute = express.Router();
 const Authorization = require('../middleware/jsontoken');
@@ -36,6 +36,24 @@ usersRoute.get('/myfollowing', Authorization, ErrorCatch(async (req, res, next) 
         followingList.push({ nickname, name });
     }
     return res.status(200).send({ followings: followingList });
+}));
+
+usersRoute.get('/myinfo', Authorization, ErrorCatch(async (req, res, next) => {
+    const userId = req.user[0].id;
+    const users = await User.findOne({ where: { id: userId }, attributes: ['nickname', 'name'] });
+    const myPostList = await Post.findAll({ where: { userId } });
+    const findMyFollowList = await Follower.findAll({ where: { followerId: userId } });
+    const findMyFollowerList = await Follower.findAll({ where: { followId: userId } });
+
+
+    return res.status(200).send({
+        userNickname: users.nickname,
+        userName: users.name,
+        postCount: myPostList.length,
+        myFollowCount: findMyFollowList.length,
+        myFollowerCount: findMyFollowerList.length,
+    });
+
 }));
 
 module.exports = usersRoute;
