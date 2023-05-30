@@ -1,5 +1,6 @@
 const { User, Like, Post, Photo, Comment } = require('../models');
 const { sequelize } = require('../config/database');
+const { Op } = require('sequelize');
 const express = require('express');
 const postsRoute = express.Router();
 const Authorization = require('../middleware/jsontoken');
@@ -128,6 +129,59 @@ postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
         likecount: PostLikeList, // 좋아요 수
         commentcount: CommentCountList, // 댓글 수
         commentList: CommentsList, // 댓글 목록
+        images: PostImagesUrl // 게시글에 있는 image URL
+    });
+}));
+
+postsRoute.get('/:content', Authorization, ErrorCatch(async (req, res, next) => {
+    const { content } = req.params;
+    const limit = 5;
+    const posts = await Post.findAll({
+        where: { content: { [Op.substring]: content } },
+        order: [['created_at', 'DESC']],
+        limit
+    });
+    const postId = posts.map(post => post.id);
+
+    const PostLikesCount = await Like.findAll({
+        attributes: ['postId', [sequelize.fn('COUNT', sequelize.col('id')), 'like_count']],
+        where: { postId },
+        group: ['postId']
+    });
+
+    const PostImagesUrl = []; // 게시글 이미지 URL
+    const ContentsList = [];  // 내용
+    const CreatedTimeList = []; // 생성 시간
+    const NickNameList = []; // 작성자 닉네임
+    const PostLikeList = []; // 게시물 좋아요 수
+
+    for (const post of posts) {
+        const findUserNickname = await User.findOne({
+            where: { id: post.userId },
+            attributes: ['nickname']
+        });
+
+        const checkPostLikes = PostLikesCount.find(like => like.postId === post.id);
+        const likeCount = checkPostLikes ? checkPostLikes.dataValues.like_count : 0;
+
+        ContentsList.push(post.content);
+        CreatedTimeList.push(post.createdAt);
+        NickNameList.push(findUserNickname.nickname);
+        PostLikeList.push(likeCount);
+    }
+
+    const postPhotos = await Photo.findAll({ where: { postId }, attributes: ['postId', 'url'], order: [['created_at', 'DESC']], limit });
+    for (const photo of postPhotos) {
+        const { url } = photo.dataValues;
+        PostImagesUrl.push(url);
+    }
+    PostImagesUrl.reverse();
+
+    return res.status(200).send({
+        contents: ContentsList,  // 게시글 본문
+        created_time: CreatedTimeList, // 게시글 생성 시간
+        usernickname: NickNameList, // 사용자 닉네임
+        likecount: PostLikeList, // 좋아요 수
         images: PostImagesUrl // 게시글에 있는 image URL
     });
 }));
