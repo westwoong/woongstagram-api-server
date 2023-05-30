@@ -81,6 +81,28 @@ postsRoute.patch('/:postId', Authorization, ErrorCatch(async (req, res, next) =>
     return res.status(204).send();
 }));
 
+postsRoute.delete('/:postId', Authorization, ErrorCatch(async (req, res, next) => {
+    const { postId } = req.params;
+    const userId = req.user[0].id;
+
+    const posts = await Post.findOne({ where: { id: postId } });
+
+    if (!posts) {
+        return res.status(400).send('게시물이 존재하지 않습니다.');
+    }
+    if (posts?.userId !== userId || posts === null) {
+        return res.status(403).send('본인의 게시글만 삭제가 가능합니다');
+    }
+
+    await sequelize.transaction(async (t) => {
+        await Like.destroy({ where: { postId }, transaction: t })
+        await Comment.destroy({ where: { postId }, transaction: t });
+        await Post.destroy({ where: { id: postId }, transaction: t });
+    });
+
+    return res.status(204).send();
+}));
+
 postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
     const limit = 5;
     const posts = await Post.findAll({
