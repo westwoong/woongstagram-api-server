@@ -123,7 +123,7 @@ signRoute.post('/sign-in', ErrorCatch(async (req, res) => {
 
         // 찾은 PK 값 payload.id 에 할당하기.
         const payload = { id: UserPkValue }
-        const accessToken = jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "2h" });
+        const accessToken = jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "7d" });
         const refreshToken = jwt.sign(payload, process.env.REFRESH_SECRETKEY, { expiresIn: "60d" });
 
         //PK 값만 추출
