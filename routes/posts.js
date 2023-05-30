@@ -1,4 +1,4 @@
-const { Post, Photo } = require('../models');
+const { User, Like, Post, Photo, Comment } = require('../models');
 const { sequelize } = require('../config/database');
 const express = require('express');
 const postsRoute = express.Router();
@@ -47,5 +47,89 @@ postsRoute.post('/', Authorization, ErrorCatch(async (req, res, next) => {
     return res.status(201).send({ postTransaction });
 }));
 
+postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
+    const limit = 5;
+    const posts = await Post.findAll({
+        attributes: ['id', 'user_id', 'created_at', 'content'], order: [['created_at', 'DESC']], limit
+    });
+    const postId = posts.map(post => post.id);
+    const PostLikesCount = await Like.findAll({
+        attributes: ['postId', [sequelize.fn('COUNT', sequelize.col('id')), 'like_count']],
+        where: { postId },
+        group: ['postId']
+    });
+    const PostCommentsCount = await Comment.findAll({
+        attributes: ['postId', [sequelize.fn('COUNT', sequelize.col('id')), 'comment_count']],
+        where: { postId },
+        group: ['postId']
+    });
+    const postPhotos = await Photo.findAll({ where: { postId }, attributes: ['postId', 'url'], order: [['created_at', 'DESC']], limit });
+    // console.log(postPhotos);
+    const PostImagesUrl = []; // 게시글 이미지 URL
+    const ContentsList = [];  // 내용
+    const CreatedTimeList = []; // 생성 시간
+    const NickNameList = []; // 작성자 닉네임
+    const PostLikeList = []; // 게시물 좋아요 수
+    const CommentCountList = []; // 댓글 수
+    const CommentsList = []; // 댓글 내용
+
+    for (const post of posts) {
+        const { id, user_id, created_at } = post.dataValues;
+        const findUserNickname = await User.findOne({
+            where: { id: user_id },
+            attributes: ['nickname']
+        });
+        const findComments = await Comment.findAll({
+            where: { postId: id },
+            attributes: ['content', 'userId'],
+            order: [['created_at', 'DESC']],
+            limit: 1
+        });
+        const commentUserId = findComments.map(comment => comment.dataValues.userId);
+        // console.log(commentUserId);
+        const userNicknames = await User.findAll({ where: { id: commentUserId }, attributes: ['id', 'nickname'] });
+
+
+        const commentsAndNickname = findComments.map(comment => {
+            // userNcinames에서 댓글남긴 userId와 users테이블에 있는 id와 같으면 nickname을 할당 없으면 '' 빈값 할당
+            const userNickname = userNicknames.find(user => user.id === comment.userId)?.nickname || '';
+            return {
+                nickname: userNickname,
+                comment: comment.content
+            };
+        });
+        CommentsList.push(commentsAndNickname);
+
+        // find메서드를 사용하여 PostLikesCount에 있는 postId의 값을 찾은 후 post.dataValues.id과 동일하면 변수에 ㅏㄹ당
+        const checkPostLikes = PostLikesCount.find(like => like.postId === id);
+        // ?를 사용해서 checkPostLikes의 값이 null이나 undefined가 아니면 이후 코드 실행
+        const likeCount = checkPostLikes ? checkPostLikes.dataValues.like_count : 0;
+        const checkPostComments = PostCommentsCount.find(comment => comment.postId === id);
+        const CommentCount = checkPostComments ? checkPostComments.dataValues.comment_count : 0;
+
+        ContentsList.push(post.content);
+        CreatedTimeList.push(created_at);
+        NickNameList.push(findUserNickname.nickname);
+        PostLikeList.push(likeCount);
+        CommentCountList.push(CommentCount);
+    }
+
+    for (const photo of postPhotos) {
+        const { url } = photo.dataValues;
+        PostImagesUrl.push(url);
+    }
+
+    PostImagesUrl.reverse();
+
+    return res.status(200).send({
+        contents: ContentsList,  // 게시글 본문
+        created_time: CreatedTimeList, // 게시글 생성 시간
+        usernickname: NickNameList, // 사용자 닉네임
+        likecount: PostLikeList, // 좋아요 수
+        commentcount: CommentCountList, // 댓글 수
+        commentList: CommentsList, // 댓글 목록
+        images: PostImagesUrl // 게시글에 있는 image URL
+    });
+}));
 
 module.exports = postsRoute;
