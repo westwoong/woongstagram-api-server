@@ -1,4 +1,4 @@
-const { Comment } = require('../models');
+const { User, Comment } = require('../models');
 const express = require('express');
 const commentsRoute = express.Router();
 const Authorization = require('../middleware/jsontoken');
@@ -17,6 +17,38 @@ commentsRoute.post('/:postId', Authorization, ErrorCatch(async (req, res, next) 
     return res.status(201).send('작성이 완료되었습니다');
 }));
 
+commentsRoute.get('/:postId', Authorization, ErrorCatch(async (req, res, next) => {
+    const { postId } = req.params;
+    const comments = await Comment.findAll({
+        where: { postId },
+        attributes: ['userId', 'createdAt', 'content']
+    });
+    const Nickname = [];
+    const contentList = [];
+    const createTime = [];
+
+    if (!comments) {
+        return res.status(404).send('게시글이 존재하지 않습니다.');
+    }
+    for (const comment of comments) {
+        const { userId, createdAt, content } = comment.dataValues;
+        const findUserNickname = await User.findOne({ where: { id: userId }, attributes: ['nickname'] });
+
+        Nickname.push(findUserNickname.dataValues.nickname);
+        contentList.push(content);
+        createTime.push(createdAt);
+
+    }
+
+    // console.log(comments);
+
+    return res.status(200).send({
+        usernickname: Nickname,
+        created_time: createTime,
+        content: contentList
+    });
+}));
+
 commentsRoute.patch('/:commentId', Authorization, ErrorCatch(async (req, res, next) => {
     const { commentId } = req.params;
     const { comment } = req.body;
@@ -28,7 +60,7 @@ commentsRoute.patch('/:commentId', Authorization, ErrorCatch(async (req, res, ne
     }
 
     if (!foundComment) {
-        return res.status(400).send('수정하려는 댓글이 존재하지 않습니다.');
+        return res.status(404).send('수정하려는 댓글이 존재하지 않습니다.');
     }
 
     if (!comment || comment.length > 100) {
