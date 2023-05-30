@@ -40,15 +40,25 @@ const upload = multer({
     fileFilter
 }).array('photos', 10);
 
-uploadRoute.post("/", Authorization, upload, ErrorCatch(async (req, res) => {
+uploadRoute.post('/', Authorization, upload, ErrorCatch(async (req, res) => {
     const photos = req.files;
 
     for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
         await Photo.create({ url: `http://localhost:3000/images/${photos[PhotoArrayLength].filename}`, sequence: PhotoArrayLength });
     }
-    res.status(201).json(photos);
+    return res.status(201).json(photos);
 
 }));
 
+uploadRoute.patch('/:photoId', Authorization, upload, ErrorCatch(async (req, res) => {
+    const { photoId } = req.params;
+    const photos = req.files;
+
+    for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
+        await Photo.update({ url: `http://localhost:3000/images/${photos[PhotoArrayLength].filename}`, sequence: PhotoArrayLength }, { where: { id: photoId } });
+
+    }
+    return res.status(204).send();
+}));
 
 module.exports = uploadRoute;
