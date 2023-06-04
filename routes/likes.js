@@ -39,7 +39,7 @@ likesRoute.get('/:postId', Authorization, ErrorCatch(async (req, res) => {
         const users = await User.findOne({ where: { id: like.userId }, attributes: ['name', 'nickname'], limit });
         const posts = await Post.findOne({ where: { id: postId }, attributes: ['userId'], limit });
         const follows = await Follower.findOne({ where: { follower_id: posts.userId } });
-        const followCheck = follows ? 'Y' : 'N';
+        const followCheck = follows ? true : false;
 
         UserName.push(users.name); // 좋아요 누른사람 실명
         UserNickname.push(users.nickname); // 좋아요 누른사람 별명
