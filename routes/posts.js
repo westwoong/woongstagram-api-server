@@ -5,6 +5,7 @@ const express = require('express');
 const postsRoute = express.Router();
 const Authorization = require('../middleware/jsontoken');
 const ErrorCatch = require('../middleware/trycatch');
+const HttpException = require('../middleware/HttpException');
 
 postsRoute.post('/', Authorization, ErrorCatch(async (req, res, next) => {
     const { content, photos } = req.body;
@@ -23,29 +24,36 @@ postsRoute.post('/', Authorization, ErrorCatch(async (req, res, next) => {
     }
 
 
-    // sequelize 트랜잭션 매서드
+    const validationPhotosUrl = [];
+
     const postTransaction = await sequelize.transaction(async (t) => {
-        const updatePost = await Post.create({ content, userId }, { transaction: t });
+        const createPost = await Post.create({ content, userId }, { transaction: t });
 
         const photoPromise = photos.map(async (photosUrl) => {
             const checkPhotoUrl = await Photo.findOne({ where: { url: photosUrl } }); // map array에 담겨있는 URL를 찾는 변수
             if (!checkPhotoUrl) {
-                // map array에 없는게 있을경우 캐치하여 해당 배열 URL반환
-                return res.status(404).send(`${photosUrl}해당 이미지는 존재하지 않습니다.`);
+                // DB에 존재하지 않는 URL 확인 시 검증 배열로 넣기
+                validationPhotosUrl.push(photosUrl);
+            } else {
+                /*
+                찾은 URL의 같은필드에있는 post_id를 게시물의 PK(createPost.id)로 update시켜준다
+                이때 { transaction: t } 으로 묶은 게시물작성과, 사진 FK 업데이트중 하나라도 실패한다면 쿼리 롤백
+                */
+                await checkPhotoUrl.update({ postId: createPost.id }, { transaction: t });
             }
-            /*
-            찾은 URL의 같은필드에있는 post_id를 게시물의 PK(updatePost.id)로 update시켜준다
-            이때 { transaction: t } 으로 묶은 게시물작성과, 사진 FK 업데이트중 하나라도 실패한다면 쿼리 롤백
-            */
-            await checkPhotoUrl.update({ postId: updatePost.id }, { transaction: t });
-
         });
         // photoPromise 함수의 모든 작업이 완료될때까지 대기한다.
         // 모든 작업을 동시에 실행하여 하나라도 거부될경우 오류를 반환
         await Promise.all(photoPromise);
-        return updatePost;
+
+        if (validationPhotosUrl.length > 0) {
+            const failsPhotosUrl = validationPhotosUrl.join(', ');
+            throw new HttpException(`${failsPhotosUrl} 해당 이미지 주소는 존재하지않습니다`, 404)
+        }
+        else {
+            return res.status(201).send({ postTransaction });
+        }
     });
-    return res.status(201).send({ postTransaction });
 }));
 
 postsRoute.patch('/:postId', Authorization, ErrorCatch(async (req, res, next) => {
