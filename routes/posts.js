@@ -128,14 +128,8 @@ postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
         group: ['postId']
     });
     const postPhotos = await Photo.findAll({ where: { postId }, attributes: ['postId', 'url'], order: [['created_at', 'DESC']], limit });
-    // console.log(postPhotos);
-    const PostImagesUrl = []; // 게시글 이미지 URL
-    const ContentsList = [];  // 내용
-    const CreatedTimeList = []; // 생성 시간
-    const NickNameList = []; // 작성자 닉네임
-    const PostLikeList = []; // 게시물 좋아요 수
-    const CommentCountList = []; // 댓글 수
-    const CommentsList = []; // 댓글 내용
+
+    const postsData = [];
 
     for (const post of posts) {
         const { id, user_id, created_at } = post.dataValues;
@@ -150,7 +144,6 @@ postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
             limit: 1
         });
         const commentUserId = findComments.map(comment => comment.dataValues.userId);
-        // console.log(commentUserId);
         const userNicknames = await User.findAll({ where: { id: commentUserId }, attributes: ['id', 'nickname'] });
 
 
@@ -162,38 +155,31 @@ postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
                 comment: comment.content
             };
         });
-        CommentsList.push(commentsAndNickname);
 
-        // find메서드를 사용하여 PostLikesCount에 있는 postId의 값을 찾은 후 post.dataValues.id과 동일하면 변수에 ㅏㄹ당
+        // find메서드를 사용하여 PostLikesCount에 있는 postId의 값을 찾은 후 post.dataValues.id과 동일하면 변수에 할당
         const checkPostLikes = PostLikesCount.find(like => like.postId === id);
         // ?를 사용해서 checkPostLikes의 값이 null이나 undefined가 아니면 이후 코드 실행
         const likeCount = checkPostLikes ? checkPostLikes.dataValues.like_count : 0;
         const checkPostComments = PostCommentsCount.find(comment => comment.postId === id);
         const CommentCount = checkPostComments ? checkPostComments.dataValues.comment_count : 0;
 
-        ContentsList.push(post.content);
-        CreatedTimeList.push(created_at);
-        NickNameList.push(findUserNickname.nickname);
-        PostLikeList.push(likeCount);
-        CommentCountList.push(CommentCount);
+        // 사진중 postId가 동일한것만 map으로 url만 반환
+        const postPhotosUrl = postPhotos.filter(photo => photo.postId === id).map(photo => photo.url);
+
+        postsData.push({
+            contents: post.content,
+            created_time: created_at,
+            usernickname: findUserNickname.nickname,
+            likecount: likeCount,
+            commentcount: CommentCount,
+            commentList: commentsAndNickname,
+            images: postPhotosUrl
+        });
+
     }
 
-    for (const photo of postPhotos) {
-        const { url } = photo.dataValues;
-        PostImagesUrl.push(url);
-    }
+    return res.status(200).send({ data: postsData });
 
-    PostImagesUrl.reverse();
-
-    return res.status(200).send({
-        contents: ContentsList,  // 게시글 본문
-        created_time: CreatedTimeList, // 게시글 생성 시간
-        usernickname: NickNameList, // 사용자 닉네임
-        likecount: PostLikeList, // 좋아요 수
-        commentcount: CommentCountList, // 댓글 수
-        commentList: CommentsList, // 댓글 목록
-        images: PostImagesUrl // 게시글에 있는 image URL
-    });
 }));
 
 postsRoute.get('/:content', Authorization, ErrorCatch(async (req, res, next) => {
