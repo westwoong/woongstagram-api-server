@@ -1,19 +1,12 @@
 const { Photo } = require('../models');
+const { S3Client } = require('@aws-sdk/client-s3');
 const express = require('express');
 const uploadRoute = express.Router();
 const multer = require('multer');
+const multerS3 = require('multer-s3');
 const Authorization = require('../middleware/jsontoken');
 const ErrorCatch = require('../middleware/trycatch');
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'images/');
-    },
-    filename: function (req, file, cb) {
-        // cb(null, 'posts_image-' + Date.now() + file.originalname);
-        cb(null, file.originalname);
-    }
-});
+require('dotenv').config('../.env');
 
 const fileFilter = (req, file, cb) => {
     const photos = req.files;
@@ -34,8 +27,25 @@ const fileFilter = (req, file, cb) => {
     }
 }
 
+const s3 = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.S3_ACCESS_KEY,
+        secretAccessKey: process.env.S3_SECRET_KEY
+    }
+})
+
 const upload = multer({
-    storage,
+    storage: multerS3({
+        s3: s3,
+        bucket: 'woong-nodejs-uploaded-files',
+        metadata: function (req, file, cb) {
+            cb(null, { fieldName: file.fieldname });
+        },
+        key: function (req, file, cb) {
+            cb(null, file.originalname);
+        }
+    }),
     limits: { fileSize: 20000000 }, // byte 단위, 20Mb
     fileFilter
 }).array('photos', 10);
@@ -44,7 +54,7 @@ uploadRoute.post('/', Authorization, upload, ErrorCatch(async (req, res) => {
     const photos = req.files;
 
     for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
-        await Photo.create({ url: `http://localhost:3000/images/${photos[PhotoArrayLength].filename}`, sequence: PhotoArrayLength });
+        await Photo.create({ url: photos[PhotoArrayLength].location, sequence: PhotoArrayLength });
     }
     return res.status(201).json(photos);
 
@@ -55,7 +65,7 @@ uploadRoute.patch('/:photoId', Authorization, upload, ErrorCatch(async (req, res
     const photos = req.files;
 
     for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
-        await Photo.update({ url: `http://localhost:3000/images/${photos[PhotoArrayLength].filename}`, sequence: PhotoArrayLength }, { where: { id: photoId } });
+        await Photo.update({ url: photos.location, sequence: PhotoArrayLength }, { where: { id: photoId } });
 
     }
     return res.status(204).send();
