@@ -112,9 +112,12 @@ postsRoute.delete('/:postId', Authorization, ErrorCatch(async (req, res, next) =
 }));
 
 postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
-    const limit = 5;
+    const page = req.query.page || 1; // 클라이언트 값이 없을 시 기본값 1
+    const limit = 2;
+    const offset = (page - 1) * limit;
+
     const posts = await Post.findAll({
-        attributes: ['id', 'user_id', 'created_at', 'content'], order: [['created_at', 'DESC']], limit
+        attributes: ['id', 'user_id', 'created_at', 'content'], order: [['created_at', 'DESC']], limit, offset
     });
     const postId = posts.map(post => post.id);
     const PostLikesCount = await Like.findAll({
@@ -177,8 +180,22 @@ postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
         });
 
     }
+    const totalPostCount = await Post.count(); // 전체 게시글 수 조회
+    const totalPages = Math.ceil(totalPostCount / limit); // 전체 페이지 수 계산
+    const nextPage = page < totalPages; // 다음 페이지 여부 있으면 true
+    const prevPage = page > 1; // 이전 페이지 여부 있으면 true
 
-    return res.status(200).send({ data: postsData });
+    return res.status(200).send({
+        data: postsData,
+        pagination: {
+            page,
+            limit,
+            totalPostCount,
+            totalPages,
+            nextPage,
+            prevPage
+        }
+    });
 
 }));
 
