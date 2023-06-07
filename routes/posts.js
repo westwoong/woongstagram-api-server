@@ -185,8 +185,8 @@ postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
     const nextPage = page < totalPages; // 다음 페이지 여부 있으면 true
     const prevPage = page > 1; // 이전 페이지 여부 있으면 true
 
-    return res.status(200).send({
-        data: postsData,
+    return res.status(200).send({ //응답형식 카멜케이스로 바꾸기
+        posts: postsData,
         pagination: {
             page,
             limit,
