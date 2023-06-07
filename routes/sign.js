@@ -144,7 +144,11 @@ signRoute.post('/sign-in', ErrorCatch(async (req, res) => {
 signRoute.post('/refresh-token', RefreshAuthorization, ErrorCatch(async (req, res) => {
 
     const userId = req.user[0].id;
-
+    const token = req.token;
+    const validationToken = await User.findOne({ where: { id: userId }, attributes: ['refresh_Token'] });
+    if (token !== validationToken.dataValues.refresh_Token) {
+        return res.status(401).send('401');
+    }
     const payload = { id: userId };
     const accessToken = jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "7d" });
 

@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config('../.env');
 
 const RefreshAuthorization = (req, res, next) => {
+
     const authHeader = req.headers.authorization;
     console.log(req.headers.authorization);
     if (!authHeader) {
@@ -29,6 +30,7 @@ const RefreshAuthorization = (req, res, next) => {
         return res.status(401).send('로그인을 해주시기 바랍니다.');
     }
     req.user = payload.id;
+    req.token = token;
     next();
 };
 
