@@ -49,8 +49,8 @@ likesRoute.get('/:postId', Authorization, ErrorCatch(async (req, res) => {
         })
     }
 
-    const totalPostCount = await Like.count({ where: { postId } }); // 전체 게시글 수 조회
-    const totalPages = Math.ceil(totalPostCount / limit); // 전체 페이지 수 계산
+    const totalLikesCount = await Like.count({ where: { postId } });
+    const totalPages = Math.ceil(totalLikesCount / limit); // 전체 페이지 수 계산
     const nextPage = page < totalPages; // 다음 페이지 여부 있으면 true
     const prevPage = page > 1; // 이전 페이지 여부 있으면 true
 
@@ -59,7 +59,7 @@ likesRoute.get('/:postId', Authorization, ErrorCatch(async (req, res) => {
         pagination: {
             page,
             limit,
-            totalPostCount,
+            totalLikesCount,
             totalPages,
             nextPage,
             prevPage
