@@ -4,6 +4,9 @@ app.use(express.json());
 require('dotenv').config();
 require('./config/database');
 require('./models/index');
+const morgan = require('morgan');
+const logger = require('./utils/logger');
+app.use(morgan('combined', { stream: logger.stream }));
 
 // router 정의
 const routes = require('./routes');
