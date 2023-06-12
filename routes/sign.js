@@ -5,6 +5,7 @@ require('dotenv').config('../.env');
 const express = require('express');
 const signRoute = express.Router();
 const ErrorCatch = require('../middleware/trycatch');
+const RefreshAuthorization = require('../middleware/RefreshToken');
 
 signRoute.post('/sign-up', ErrorCatch(async (req, res) => {
     const { name, nickname, password, phoneNumber } = req.body;
@@ -128,17 +129,30 @@ signRoute.post('/sign-in', ErrorCatch(async (req, res) => {
 
         //PK 값만 추출
         const realPrimayKey = payload.id[0].dataValues.id;
-        console.log(realPrimayKey);
 
         // 입력한 비밀번호화 DB에 있는 정보가 동일한지 확인
         if (hashedPassword === storedHashedPassword) {
             //refresh_token 값 DB 저장
             await User.update({ refreshToken }, { where: { id: realPrimayKey } });
-            return res.status(200).send({ accessToken });
+            return res.status(200).send({ accessToken, refreshToken });
         } else {
             return res.status(400).send("비밀번호가 틀렸습니다.");
         }
     });
+}));
+
+signRoute.post('/refresh-token', RefreshAuthorization, ErrorCatch(async (req, res) => {
+
+    const userId = req.user[0].id;
+    const token = req.token;
+    const validationToken = await User.findOne({ where: { id: userId }, attributes: ['refresh_Token'] });
+    if (token !== validationToken.dataValues.refresh_Token) {
+        return res.status(401).send('401');
+    }
+    const payload = { id: userId };
+    const accessToken = jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "7d" });
+
+    return res.status(200).send({ accessToken });
 }));
 
 module.exports = signRoute;
