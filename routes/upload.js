@@ -43,7 +43,7 @@ const upload = multer({
             cb(null, { fieldName: file.fieldname });
         },
         key: function (req, file, cb) {
-            cb(null, file.originalname);
+            cb(null, Date.now() + file.originalname);
         }
     }),
     limits: { fileSize: 20000000 }, // byte 단위, 20Mb
