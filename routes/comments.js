@@ -19,13 +19,18 @@ commentsRoute.post('/:postId', Authorization, ErrorCatch(async (req, res, next) 
 
 commentsRoute.get('/:postId', Authorization, ErrorCatch(async (req, res, next) => {
     const { postId } = req.params;
+    const page = req.query.page || 1;
+    const limit = 2;
+    const offset = (page - 1) * limit;
+
     const comments = await Comment.findAll({
         where: { postId },
-        attributes: ['userId', 'createdAt', 'content']
+        attributes: ['userId', 'createdAt', 'content'],
+        limit,
+        offset
     });
-    const Nickname = [];
-    const contentList = [];
-    const createTime = [];
+
+    const commentsData = [];
 
     if (!comments) {
         return res.status(404).send('게시글이 존재하지 않습니다.');
@@ -34,19 +39,31 @@ commentsRoute.get('/:postId', Authorization, ErrorCatch(async (req, res, next) =
         const { userId, createdAt, content } = comment.dataValues;
         const findUserNickname = await User.findOne({ where: { id: userId }, attributes: ['nickname'] });
 
-        Nickname.push(findUserNickname.dataValues.nickname);
-        contentList.push(content);
-        createTime.push(createdAt);
+        commentsData.push({
+            nickname: findUserNickname.dataValues.nickname,
+            content: content,
+            createdAt: createdAt
+        });
 
     }
 
-    // console.log(comments);
+    const totalCommentsCount = await Comment.count({ where: { postId } }); // 게시글에 있는 전체 댓글 수 조회
+    const totalPages = Math.ceil(totalCommentsCount / limit); // 전체 페이지 수 계산
+    const nextPage = page < totalPages; // 다음 페이지 여부 있으면 true
+    const prevPage = page > 1; // 이전 페이지 여부 있으면 true
 
     return res.status(200).send({
-        usernickname: Nickname,
-        created_time: createTime,
-        content: contentList
+        commentsData: commentsData,
+        pagination: {
+            page,
+            limit,
+            totalCommentsCount,
+            totalPages,
+            nextPage,
+            prevPage
+        }
     });
+
 }));
 
 commentsRoute.patch('/:commentId', Authorization, ErrorCatch(async (req, res, next) => {
