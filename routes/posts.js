@@ -201,11 +201,15 @@ postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
 
 postsRoute.get('/:content', Authorization, ErrorCatch(async (req, res, next) => {
     const { content } = req.params;
-    const limit = 5;
+    const page = req.query.page || 1; // 클라이언트 값이 없을 시 기본값 1
+    const limit = 2;
+    const offset = (page - 1) * limit;
+
     const posts = await Post.findAll({
         where: { content: { [Op.substring]: content } },
         order: [['created_at', 'DESC']],
-        limit
+        limit,
+        offset
     });
     const postId = posts.map(post => post.id);
 
@@ -215,11 +219,7 @@ postsRoute.get('/:content', Authorization, ErrorCatch(async (req, res, next) => 
         group: ['postId']
     });
 
-    const PostImagesUrl = []; // 게시글 이미지 URL
-    const ContentsList = [];  // 내용
-    const CreatedTimeList = []; // 생성 시간
-    const NickNameList = []; // 작성자 닉네임
-    const PostLikeList = []; // 게시물 좋아요 수
+    const postsData = [];
 
     for (const post of posts) {
         const findUserNickname = await User.findOne({
@@ -229,26 +229,35 @@ postsRoute.get('/:content', Authorization, ErrorCatch(async (req, res, next) => 
 
         const checkPostLikes = PostLikesCount.find(like => like.postId === post.id);
         const likeCount = checkPostLikes ? checkPostLikes.dataValues.like_count : 0;
+        const postPhotos = await Photo.findAll({ where: { postId }, attributes: ['postId', 'url'], order: [['created_at', 'DESC']], limit });
 
-        ContentsList.push(post.content);
-        CreatedTimeList.push(post.createdAt);
-        NickNameList.push(findUserNickname.nickname);
-        PostLikeList.push(likeCount);
+        for (const photo of postPhotos) {
+            const { url } = photo.dataValues;
+            postsData.push({
+                content: post.content,
+                createAt: post.createAt,
+                nickname: findUserNickname.nickname,
+                likeCount: likeCount,
+                image: url
+            })
+        }
     }
 
-    const postPhotos = await Photo.findAll({ where: { postId }, attributes: ['postId', 'url'], order: [['created_at', 'DESC']], limit });
-    for (const photo of postPhotos) {
-        const { url } = photo.dataValues;
-        PostImagesUrl.push(url);
-    }
-    PostImagesUrl.reverse();
+    const totalPostCount = await Post.count({ where: { content: { [Op.substring]: content } } }); // 검색한 내용이 포함된 게시글 수 조회
+    const totalPages = Math.ceil(totalPostCount / limit); // 전체 페이지 수 계산
+    const nextPage = page < totalPages; // 다음 페이지 여부 있으면 true
+    const prevPage = page > 1; // 이전 페이지 여부 있으면 true
 
     return res.status(200).send({
-        contents: ContentsList,  // 게시글 본문
-        created_time: CreatedTimeList, // 게시글 생성 시간
-        usernickname: NickNameList, // 사용자 닉네임
-        likecount: PostLikeList, // 좋아요 수
-        images: PostImagesUrl // 게시글에 있는 image URL
+        postsData: postsData,
+        pagination: {
+            page,
+            limit,
+            totalPostCount,
+            totalPages,
+            nextPage,
+            prevPage
+        }
     });
 }));
 
