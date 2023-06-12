@@ -1,10 +1,10 @@
 const jwt = require('jsonwebtoken');
+const logger = require('../utils/logger');
 require('dotenv').config('../.env');
 
-
 const Authorization = (req, res, next) => {
+
     const authHeader = req.headers.authorization;
-    console.log(req.headers.authorization);
     if (!authHeader) {
         return res.status(400).send('로그인을 해주시기 바랍니다.');
     }
@@ -15,15 +15,14 @@ const Authorization = (req, res, next) => {
         payload = jwt.verify(token, process.env.JSON_SECRETKEY);
     } catch (err) {
         if (err.message === "invalid signature") {
-            console.log(err.message);
+            logger.error(err.message);
             return res.status(401).send("잘못된 토큰입니다.");
         }
         if (err.message === "jwt expired") {
-            console.log(err.message);
+            logger.error(err.message);
             return res.status(401).send("유효기간이 만료된 토큰입니다.");
-        }
-        else {
-            console.log(err);
+        } else {
+            logger.error(err);
             return res.status(401).send("로그인에러가 발생하였습니다 다시 로그인해주시기 바랍니다.");
         }
     }

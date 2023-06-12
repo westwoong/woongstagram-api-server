@@ -1,4 +1,5 @@
 const { Sequelize } = require('sequelize');
+const logger = require('../utils/logger');
 require('dotenv').config('../.env');
 
 const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
@@ -13,11 +14,11 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, proces
 const dbConnecting = async () => {
     try {
         await sequelize.authenticate();
-        console.log('sequelize connection success!');
+        logger.info('sequelize connection success!');
         await sequelize.sync({ force: false });
     }
     catch (error) {
-        console.error(`connection failes :${error}`);
+        logger.error(`connection failes :${error}`);
     }
 }
 
