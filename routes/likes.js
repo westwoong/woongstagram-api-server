@@ -29,29 +29,43 @@ likesRoute.delete('/:postId', Authorization, ErrorCatch(async (req, res) => {
 
 likesRoute.get('/:postId', Authorization, ErrorCatch(async (req, res) => {
     const { postId } = req.params;
-    const limit = 5;
-    const likes = await Like.findAll({ where: { postId }, attributes: ['userId', 'postId'], limit });
-    const UserNickname = [];
-    const UserName = [];
-    const isFollower = [];
+    const page = req.query.page || 1; // 클라이언트 값이 없을 시 기본값 1
+    const limit = 2;
+    const offset = (page - 1) * limit;
+    const likes = await Like.findAll({ where: { postId }, attributes: ['userId', 'postId'], limit, offset });
+
+    const likesData = [];
 
     for (const like of likes) {
-        const users = await User.findOne({ where: { id: like.userId }, attributes: ['name', 'nickname'], limit });
+        const users = await User.findOne({ where: { id: like.userId }, attributes: ['name', 'nickname'], limit, offset });
         const posts = await Post.findOne({ where: { id: postId }, attributes: ['userId'], limit });
         const follows = await Follower.findOne({ where: { follower_id: posts.userId } });
         const followCheck = follows ? true : false;
 
-        UserName.push(users.name); // 좋아요 누른사람 실명
-        UserNickname.push(users.nickname); // 좋아요 누른사람 별명
-        isFollower.push(followCheck); // 팔로우 유무 확인
+        likesData.push({
+            name: users.name,
+            nickname: users.nickname,
+            isFollower: followCheck
+        })
     }
 
+    const totalPostCount = await Like.count({ where: { postId } }); // 전체 게시글 수 조회
+    const totalPages = Math.ceil(totalPostCount / limit); // 전체 페이지 수 계산
+    const nextPage = page < totalPages; // 다음 페이지 여부 있으면 true
+    const prevPage = page > 1; // 이전 페이지 여부 있으면 true
 
     return res.status(200).send({
-        likeusernickname: UserNickname,
-        likeusername: UserName,
-        isFollower: isFollower,
-    });
+        likesData: likesData,
+        pagination: {
+            page,
+            limit,
+            totalPostCount,
+            totalPages,
+            nextPage,
+            prevPage
+        }
+
+    })
 }));
 
 module.exports = likesRoute;
