@@ -6,13 +6,17 @@ const postsRoute = express.Router();
 const authorization = require('../middleware/jwtAuth');
 const asyncHandler = require('../middleware/asyncHandler');
 const HttpException = require('../errors/HttpException');
+const BadRequestException = require('../errors/BadRequestException');
 
 postsRoute.post('/', authorization, asyncHandler(async (req, res, next) => {
     const { content, photos } = req.body;
     const userId = req.user[0].id;
 
     if (!content || content.length === 0) {
-        return res.status(400).send('본문의 내용을 입력해 주시기 바랍니다.');
+        // return res.status(400).send('본문의 내용을 입력해 주시기 바랍니다.');
+        console.log(new BadRequestException('본문의 내용을 입력해 주시기 바랍니다'));
+        throw new BadRequestException('본문의 내용을 입력해 주시기 바랍니다');
+        // throw new HttpException('본문의 내용을 입력해 주시기 바랍니다', 400);
     }
     if (content.length > 1000) {
         return res.status(400).send('본문의 내용은 최대 1000자 까지 입력이 가능합니다.');
