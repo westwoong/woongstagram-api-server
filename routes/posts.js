@@ -5,7 +5,7 @@ const express = require('express');
 const postsRoute = express.Router();
 const authorization = require('../middleware/jsontoken');
 const asyncHandler = require('../middleware/asyncHandler');
-const HttpException = require('../middleware/HttpException');
+const HttpException = require('../errors/HttpException');
 
 postsRoute.post('/', authorization, asyncHandler(async (req, res, next) => {
     const { content, photos } = req.body;

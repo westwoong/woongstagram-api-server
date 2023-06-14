@@ -1,5 +1,5 @@
 const logger = require('../utils/logger');
-const HttpException = require('./HttpException');
+const HttpException = require('../errors/HttpException');
 module.exports = (requestHandler) => {
     return async (req, res, next) => {
         try {
