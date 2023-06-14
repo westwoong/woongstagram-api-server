@@ -1,11 +1,11 @@
 const { Follower } = require('../models');
 const express = require('express');
 const followsRoute = express.Router();
-const Authorization = require('../middleware/jsontoken');
-const ErrorCatch = require('../middleware/trycatch');
+const authorization = require('../middleware/jsontoken');
+const asyncHandler = require('../middleware/trycatch');
 
 
-followsRoute.post('/:followId', Authorization, ErrorCatch(async (req, res, next) => {
+followsRoute.post('/:followId', authorization, asyncHandler(async (req, res, next) => {
     const { followId } = req.params;
     const followerId = req.user[0].id;
 
@@ -17,7 +17,7 @@ followsRoute.post('/:followId', Authorization, ErrorCatch(async (req, res, next)
     return res.status(204).send();
 }));
 
-followsRoute.delete('/:followId', Authorization, ErrorCatch(async (req, res, next) => {
+followsRoute.delete('/:followId', authorization, asyncHandler(async (req, res, next) => {
     const { followId } = req.params;
     const followerId = req.user[0].id;
 

@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
 require('dotenv').config('../.env');
 
-const Authorization = (req, res, next) => {
+const authorization = (req, res, next) => {
 
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -33,4 +33,4 @@ const Authorization = (req, res, next) => {
     next();
 };
 
-module.exports = Authorization
+module.exports = authorization

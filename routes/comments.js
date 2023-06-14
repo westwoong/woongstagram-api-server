@@ -1,11 +1,11 @@
 const { User, Comment } = require('../models');
 const express = require('express');
 const commentsRoute = express.Router();
-const Authorization = require('../middleware/jsontoken');
-const ErrorCatch = require('../middleware/trycatch');
+const authorization = require('../middleware/jsontoken');
+const asyncHandler = require('../middleware/trycatch');
 
 
-commentsRoute.post('/:postId', Authorization, ErrorCatch(async (req, res, next) => {
+commentsRoute.post('/:postId', authorization, asyncHandler(async (req, res, next) => {
     const { postId } = req.params;
     const { comment } = req.body;
     if (!comment || comment.length > 100) {
@@ -17,7 +17,7 @@ commentsRoute.post('/:postId', Authorization, ErrorCatch(async (req, res, next) 
     return res.status(201).send('작성이 완료되었습니다');
 }));
 
-commentsRoute.get('/:postId', Authorization, ErrorCatch(async (req, res, next) => {
+commentsRoute.get('/:postId', authorization, asyncHandler(async (req, res, next) => {
     const { postId } = req.params;
     const page = req.query.page || 1;
     const limit = 2;
@@ -66,7 +66,7 @@ commentsRoute.get('/:postId', Authorization, ErrorCatch(async (req, res, next) =
 
 }));
 
-commentsRoute.patch('/:commentId', Authorization, ErrorCatch(async (req, res, next) => {
+commentsRoute.patch('/:commentId', authorization, asyncHandler(async (req, res, next) => {
     const { commentId } = req.params;
     const { comment } = req.body;
     const userId = req.user[0].id;
@@ -89,7 +89,7 @@ commentsRoute.patch('/:commentId', Authorization, ErrorCatch(async (req, res, ne
 
 }));
 
-commentsRoute.delete('/:commentId', Authorization, ErrorCatch(async (req, res, next) => {
+commentsRoute.delete('/:commentId', authorization, asyncHandler(async (req, res, next) => {
     const { commentId } = req.params;
     const userId = req.user[0].id;
 

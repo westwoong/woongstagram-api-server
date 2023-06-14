@@ -1,10 +1,10 @@
 const { User, Like, Post, Follower } = require('../models');
 const express = require('express');
 const likesRoute = express.Router();
-const Authorization = require('../middleware/jsontoken');
-const ErrorCatch = require('../middleware/trycatch');
+const authorization = require('../middleware/jsontoken');
+const asyncHandler = require('../middleware/trycatch');
 
-likesRoute.post('/:postId', Authorization, ErrorCatch(async (req, res) => {
+likesRoute.post('/:postId', authorization, asyncHandler(async (req, res) => {
     const { postId } = req.params;
     const userId = req.user[0].id;
     const checkLikes = await Like.findOne({ where: { postId, userId } });
@@ -20,14 +20,14 @@ likesRoute.post('/:postId', Authorization, ErrorCatch(async (req, res) => {
     res.status(204).send();
 }));
 
-likesRoute.delete('/:postId', Authorization, ErrorCatch(async (req, res) => {
+likesRoute.delete('/:postId', authorization, asyncHandler(async (req, res) => {
     const { postId } = req.params;
     const userId = req.user[0].id;
     await Like.destroy({ where: { userId, postId } });
     res.status(204).send();
 }));
 
-likesRoute.get('/:postId', Authorization, ErrorCatch(async (req, res) => {
+likesRoute.get('/:postId', authorization, asyncHandler(async (req, res) => {
     const { postId } = req.params;
     const page = req.query.page || 1; // 클라이언트 값이 없을 시 기본값 1
     const limit = 2;

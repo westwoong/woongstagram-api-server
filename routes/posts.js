@@ -3,11 +3,11 @@ const { sequelize } = require('../config/database');
 const { Op } = require('sequelize');
 const express = require('express');
 const postsRoute = express.Router();
-const Authorization = require('../middleware/jsontoken');
-const ErrorCatch = require('../middleware/trycatch');
+const authorization = require('../middleware/jsontoken');
+const asyncHandler = require('../middleware/trycatch'); // -> 파일명 변경하기
 const HttpException = require('../middleware/HttpException');
 
-postsRoute.post('/', Authorization, ErrorCatch(async (req, res, next) => {
+postsRoute.post('/', authorization, asyncHandler(async (req, res, next) => {
     const { content, photos } = req.body;
     const userId = req.user[0].id;
 
@@ -17,8 +17,8 @@ postsRoute.post('/', Authorization, ErrorCatch(async (req, res, next) => {
     if (content.length > 1000) {
         return res.status(400).send('본문의 내용은 최대 1000자 까지 입력이 가능합니다.');
     }
-    for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
-        if (!photos[PhotoArrayLength].startsWith("http://localhost:3000/images/")) {
+    for (let photoArrayLength = 0; photoArrayLength < photos.length; photoArrayLength++) {
+        if (!photos[photoArrayLength].startsWith("http://localhost:3000/images/")) {
             return res.status(400).send('http://localhost:3000/images/ 로 시작하는 이미지 주소를 입력해주세요');
         }
     }
@@ -56,7 +56,7 @@ postsRoute.post('/', Authorization, ErrorCatch(async (req, res, next) => {
     });
 }));
 
-postsRoute.patch('/:postId', Authorization, ErrorCatch(async (req, res, next) => {
+postsRoute.patch('/:postId', authorization, asyncHandler(async (req, res, next) => {
     const { postId } = req.params;
     const { content, photos } = req.body;
     const userId = req.user[0].id;
@@ -67,8 +67,8 @@ postsRoute.patch('/:postId', Authorization, ErrorCatch(async (req, res, next) =>
     if (content.length > 1000) {
         return res.status(400).send('본문의 내용은 최대 1000자 까지 입력이 가능합니다.');
     }
-    for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
-        if (!photos[PhotoArrayLength].startsWith("http://localhost:3000/images/")) {
+    for (let photoArrayLength = 0; photoArrayLength < photos.length; photoArrayLength++) {
+        if (!photos[photoArrayLength].startsWith("http://localhost:3000/images/")) {
             return res.status(400).send('http://localhost:3000/images/ 로 시작하는 이미지 주소를 입력해주세요');
         }
     }
@@ -89,7 +89,7 @@ postsRoute.patch('/:postId', Authorization, ErrorCatch(async (req, res, next) =>
     return res.status(204).send();
 }));
 
-postsRoute.delete('/:postId', Authorization, ErrorCatch(async (req, res, next) => {
+postsRoute.delete('/:postId', authorization, asyncHandler(async (req, res, next) => {
     const { postId } = req.params;
     const userId = req.user[0].id;
 
@@ -111,7 +111,7 @@ postsRoute.delete('/:postId', Authorization, ErrorCatch(async (req, res, next) =
     return res.status(204).send();
 }));
 
-postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
+postsRoute.get('/', authorization, asyncHandler(async (req, res, next) => {
     const page = req.query.page || 1; // 클라이언트 값이 없을 시 기본값 1
     const limit = 2;
     const offset = (page - 1) * limit;
@@ -120,12 +120,12 @@ postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
         attributes: ['id', 'user_id', 'created_at', 'content'], order: [['created_at', 'DESC']], limit, offset
     });
     const postId = posts.map(post => post.id);
-    const PostLikesCount = await Like.findAll({
+    const postLikesCount = await Like.findAll({
         attributes: ['postId', [sequelize.fn('COUNT', sequelize.col('id')), 'like_count']],
         where: { postId },
         group: ['postId']
     });
-    const PostCommentsCount = await Comment.findAll({
+    const postCommentsCount = await Comment.findAll({
         attributes: ['postId', [sequelize.fn('COUNT', sequelize.col('id')), 'comment_count']],
         where: { postId },
         group: ['postId']
@@ -160,11 +160,11 @@ postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
         });
 
         // find메서드를 사용하여 PostLikesCount에 있는 postId의 값을 찾은 후 post.dataValues.id과 동일하면 변수에 할당
-        const checkPostLikes = PostLikesCount.find(like => like.postId === id);
+        const checkPostLikes = postLikesCount.find(like => like.postId === id);
         // ?를 사용해서 checkPostLikes의 값이 null이나 undefined가 아니면 이후 코드 실행
         const likeCount = checkPostLikes ? checkPostLikes.dataValues.like_count : 0;
-        const checkPostComments = PostCommentsCount.find(comment => comment.postId === id);
-        const CommentCount = checkPostComments ? checkPostComments.dataValues.comment_count : 0;
+        const checkPostComments = postCommentsCount.find(comment => comment.postId === id);
+        const commentCount = checkPostComments ? checkPostComments.dataValues.comment_count : 0;
 
         // 사진중 postId가 동일한것만 map으로 url만 반환
         const postPhotosUrl = postPhotos.filter(photo => photo.postId === id).map(photo => photo.url);
@@ -174,7 +174,7 @@ postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
             created_time: created_at,
             usernickname: findUserNickname.nickname,
             likecount: likeCount,
-            commentcount: CommentCount,
+            commentcount: commentCount,
             commentList: commentsAndNickname,
             images: postPhotosUrl
         });
@@ -199,7 +199,7 @@ postsRoute.get('/', Authorization, ErrorCatch(async (req, res, next) => {
 
 }));
 
-postsRoute.get('/:content', Authorization, ErrorCatch(async (req, res, next) => {
+postsRoute.get('/:content', authorization, asyncHandler(async (req, res, next) => {
     const { content } = req.params;
     const page = req.query.page || 1; // 클라이언트 값이 없을 시 기본값 1
     const limit = 2;
@@ -213,7 +213,7 @@ postsRoute.get('/:content', Authorization, ErrorCatch(async (req, res, next) => 
     });
     const postId = posts.map(post => post.id);
 
-    const PostLikesCount = await Like.findAll({
+    const postLikesCount = await Like.findAll({
         attributes: ['postId', [sequelize.fn('COUNT', sequelize.col('id')), 'like_count']],
         where: { postId },
         group: ['postId']
@@ -227,7 +227,7 @@ postsRoute.get('/:content', Authorization, ErrorCatch(async (req, res, next) => 
             attributes: ['nickname']
         });
 
-        const checkPostLikes = PostLikesCount.find(like => like.postId === post.id);
+        const checkPostLikes = postLikesCount.find(like => like.postId === post.id);
         const likeCount = checkPostLikes ? checkPostLikes.dataValues.like_count : 0;
         const postPhotos = await Photo.findAll({ where: { postId }, attributes: ['postId', 'url'], order: [['created_at', 'DESC']], limit });
 

@@ -4,8 +4,8 @@ const express = require('express');
 const uploadRoute = express.Router();
 const multer = require('multer');
 const multerS3 = require('multer-s3');
-const Authorization = require('../middleware/jsontoken');
-const ErrorCatch = require('../middleware/trycatch');
+const authorization = require('../middleware/jsontoken');
+const asyncHandler = require('../middleware/trycatch');
 require('dotenv').config('../.env');
 
 const fileFilter = (req, file, cb) => {
@@ -50,7 +50,7 @@ const upload = multer({
     fileFilter
 }).array('photos', 10);
 
-uploadRoute.post('/', Authorization, upload, ErrorCatch(async (req, res) => {
+uploadRoute.post('/', authorization, upload, asyncHandler(async (req, res) => {
     const photos = req.files;
 
     for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
@@ -60,7 +60,7 @@ uploadRoute.post('/', Authorization, upload, ErrorCatch(async (req, res) => {
 
 }));
 
-uploadRoute.patch('/:photoId', Authorization, upload, ErrorCatch(async (req, res) => {
+uploadRoute.patch('/:photoId', authorization, upload, asyncHandler(async (req, res) => {
     const { photoId } = req.params;
     const photos = req.files;
 
