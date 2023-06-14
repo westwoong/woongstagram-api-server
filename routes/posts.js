@@ -5,28 +5,23 @@ const express = require('express');
 const postsRoute = express.Router();
 const authorization = require('../middleware/jwtAuth');
 const asyncHandler = require('../middleware/asyncHandler');
-const HttpException = require('../errors/HttpException');
-const BadRequestException = require('../errors/BadRequestException');
+const { BadRequestException, NotFoundException, ForbiddenException } = require('../errors/IndexException');
 
 postsRoute.post('/', authorization, asyncHandler(async (req, res, next) => {
     const { content, photos } = req.body;
     const userId = req.user[0].id;
 
     if (!content || content.length === 0) {
-        // return res.status(400).send('본문의 내용을 입력해 주시기 바랍니다.');
-        console.log(new BadRequestException('본문의 내용을 입력해 주시기 바랍니다'));
         throw new BadRequestException('본문의 내용을 입력해 주시기 바랍니다');
-        // throw new HttpException('본문의 내용을 입력해 주시기 바랍니다', 400);
     }
     if (content.length > 1000) {
-        return res.status(400).send('본문의 내용은 최대 1000자 까지 입력이 가능합니다.');
+        throw new BadRequestException('본문의 내용은 최대 1000자 까지 입력이 가능합니다.');
     }
     for (let photoArrayLength = 0; photoArrayLength < photos.length; photoArrayLength++) {
-        if (!photos[photoArrayLength].startsWith("http://localhost:3000/images/")) {
-            return res.status(400).send('http://localhost:3000/images/ 로 시작하는 이미지 주소를 입력해주세요');
+        if (!photos[photoArrayLength].startsWith(`${process.env.S3_BUCKET_URL}`)) {
+            throw new BadRequestException(`${process.env.S3_BUCKET_URL} 로 시작하는 이미지 주소를 입력해주세요`);
         }
     }
-
 
     const validationPhotosUrl = [];
 
@@ -34,25 +29,19 @@ postsRoute.post('/', authorization, asyncHandler(async (req, res, next) => {
         const createPost = await Post.create({ content, userId }, { transaction: t });
 
         const photoPromise = photos.map(async (photosUrl) => {
-            const checkPhotoUrl = await Photo.findOne({ where: { url: photosUrl } }); // map array에 담겨있는 URL를 찾는 변수
+            const checkPhotoUrl = await Photo.findOne({ where: { url: photosUrl } });
             if (!checkPhotoUrl) {
-                // DB에 존재하지 않는 URL 확인 시 검증 배열로 넣기
                 validationPhotosUrl.push(photosUrl);
             } else {
-                /*
-                찾은 URL의 같은필드에있는 post_id를 게시물의 PK(createPost.id)로 update시켜준다
-                이때 { transaction: t } 으로 묶은 게시물작성과, 사진 FK 업데이트중 하나라도 실패한다면 쿼리 롤백
-                */
                 await checkPhotoUrl.update({ postId: createPost.id }, { transaction: t });
             }
         });
-        // photoPromise 함수의 모든 작업이 완료될때까지 대기한다.
-        // 모든 작업을 동시에 실행하여 하나라도 거부될경우 오류를 반환
+
         await Promise.all(photoPromise);
 
         if (validationPhotosUrl.length > 0) {
             const failsPhotosUrl = validationPhotosUrl.join(', ');
-            throw new HttpException(`${failsPhotosUrl} 해당 이미지 주소는 존재하지않습니다`, 404)
+            throw new NotFoundException(`${failsPhotosUrl} 해당 이미지 주소는 존재하지않습니다.`);
         }
         else {
             return res.status(201).send({ postTransaction });
@@ -66,14 +55,14 @@ postsRoute.patch('/:postId', authorization, asyncHandler(async (req, res, next) 
     const userId = req.user[0].id;
 
     if (!content || content.length === 0) {
-        return res.status(400).send('본문의 내용을 입력해 주시기 바랍니다.');
+        throw new BadRequestException('본문의 내용을 입력해 주시기 바랍니다');
     }
     if (content.length > 1000) {
-        return res.status(400).send('본문의 내용은 최대 1000자 까지 입력이 가능합니다.');
+        throw new BadRequestException('본문의 내용은 최대 1000자 까지 입력이 가능합니다.');
     }
     for (let photoArrayLength = 0; photoArrayLength < photos.length; photoArrayLength++) {
-        if (!photos[photoArrayLength].startsWith("http://localhost:3000/images/")) {
-            return res.status(400).send('http://localhost:3000/images/ 로 시작하는 이미지 주소를 입력해주세요');
+        if (!photos[photoArrayLength].startsWith(`${process.env.S3_BUCKET_URL}`)) {
+            throw new BadRequestException(`${process.env.S3_BUCKET_URL} 로 시작하는 이미지 주소를 입력해주세요`);
         }
     }
 
@@ -82,7 +71,7 @@ postsRoute.patch('/:postId', authorization, asyncHandler(async (req, res, next) 
         const photoPromise = photos.map(async (photosUrl) => {
             const checkPhotoUrl = await Photo.findOne({ where: { url: photosUrl } });
             if (!checkPhotoUrl) {
-                return res.status(404).send(`${photosUrl}해당 이미지는 존재하지 않습니다.`);
+                throw new NotFoundException(`${photosUrl}해당 이미지는 존재하지 않습니다.`);
             }
             await checkPhotoUrl.update({ postId: updatePost.id }, { transaction: t });
 
@@ -100,10 +89,10 @@ postsRoute.delete('/:postId', authorization, asyncHandler(async (req, res, next)
     const posts = await Post.findOne({ where: { id: postId } });
 
     if (!posts) {
-        return res.status(400).send('게시물이 존재하지 않습니다.');
+        throw new BadRequestException('게시물이 존재하지 않습니다.');
     }
     if (posts?.userId !== userId || posts === null) {
-        return res.status(403).send('본인의 게시글만 삭제가 가능합니다');
+        throw new ForbiddenException('본인의 게시글만 삭제가 가능합니다.');
     }
 
     await sequelize.transaction(async (t) => {
@@ -116,7 +105,7 @@ postsRoute.delete('/:postId', authorization, asyncHandler(async (req, res, next)
 }));
 
 postsRoute.get('/', authorization, asyncHandler(async (req, res, next) => {
-    const page = req.query.page || 1; // 클라이언트 값이 없을 시 기본값 1
+    const page = req.query.page || 1;
     const limit = 2;
     const offset = (page - 1) * limit;
 
@@ -155,7 +144,6 @@ postsRoute.get('/', authorization, asyncHandler(async (req, res, next) => {
 
 
         const commentsAndNickname = findComments.map(comment => {
-            // userNcinames에서 댓글남긴 userId와 users테이블에 있는 id와 같으면 nickname을 할당 없으면 '' 빈값 할당
             const userNickname = userNicknames.find(user => user.id === comment.userId)?.nickname || '';
             return {
                 nickname: userNickname,
@@ -189,7 +177,7 @@ postsRoute.get('/', authorization, asyncHandler(async (req, res, next) => {
     const nextPage = page < totalPages; // 다음 페이지 여부 있으면 true
     const prevPage = page > 1; // 이전 페이지 여부 있으면 true
 
-    return res.status(200).send({ //응답형식 카멜케이스로 바꾸기
+    return res.status(200).send({
         posts: postsData,
         pagination: {
             page,
@@ -205,7 +193,7 @@ postsRoute.get('/', authorization, asyncHandler(async (req, res, next) => {
 
 postsRoute.get('/:content', authorization, asyncHandler(async (req, res, next) => {
     const { content } = req.params;
-    const page = req.query.page || 1; // 클라이언트 값이 없을 시 기본값 1
+    const page = req.query.page || 1;
     const limit = 2;
     const offset = (page - 1) * limit;
 
