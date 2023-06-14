@@ -4,7 +4,7 @@ const { Op } = require('sequelize');
 const express = require('express');
 const postsRoute = express.Router();
 const authorization = require('../middleware/jsontoken');
-const asyncHandler = require('../middleware/trycatch'); // -> 파일명 변경하기
+const asyncHandler = require('../middleware/asyncHandler');
 const HttpException = require('../middleware/HttpException');
 
 postsRoute.post('/', authorization, asyncHandler(async (req, res, next) => {

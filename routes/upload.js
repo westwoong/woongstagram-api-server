@@ -5,7 +5,7 @@ const uploadRoute = express.Router();
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const authorization = require('../middleware/jsontoken');
-const asyncHandler = require('../middleware/trycatch');
+const asyncHandler = require('../middleware/asyncHandler');
 require('dotenv').config('../.env');
 
 const fileFilter = (req, file, cb) => {

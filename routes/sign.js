@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config('../.env');
 const express = require('express');
 const signRoute = express.Router();
-const asyncHandler = require('../middleware/trycatch');
+const asyncHandler = require('../middleware/asyncHandler');
 const refreshAuthorization = require('../middleware/RefreshToken');
 
 signRoute.post('/sign-up', asyncHandler(async (req, res) => {

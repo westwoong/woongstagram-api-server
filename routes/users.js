@@ -2,7 +2,7 @@ const { User, Follower, Post } = require('../models');
 const express = require('express');
 const usersRoute = express.Router();
 const authorization = require('../middleware/jsontoken');
-const asyncHandler = require('../middleware/trycatch');
+const asyncHandler = require('../middleware/asyncHandler');
 
 
 usersRoute.get('/myfollower', authorization, asyncHandler(async (req, res, next) => {

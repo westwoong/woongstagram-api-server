@@ -2,7 +2,7 @@ const { User, Comment } = require('../models');
 const express = require('express');
 const commentsRoute = express.Router();
 const authorization = require('../middleware/jsontoken');
-const asyncHandler = require('../middleware/trycatch');
+const asyncHandler = require('../middleware/asyncHandler');
 
 
 commentsRoute.post('/:postId', authorization, asyncHandler(async (req, res, next) => {
