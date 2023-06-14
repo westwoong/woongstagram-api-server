@@ -5,7 +5,7 @@ require('dotenv').config('../.env');
 const express = require('express');
 const signRoute = express.Router();
 const asyncHandler = require('../middleware/asyncHandler');
-const refreshAuthorization = require('../middleware/RefreshToken');
+const refreshAuthorization = require('../middleware/refreshAuth');
 
 signRoute.post('/sign-up', asyncHandler(async (req, res) => {
     const { name, nickname, password, phoneNumber } = req.body;

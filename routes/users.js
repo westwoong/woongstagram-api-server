@@ -1,7 +1,7 @@
 const { User, Follower, Post } = require('../models');
 const express = require('express');
 const usersRoute = express.Router();
-const authorization = require('../middleware/jsontoken');
+const authorization = require('../middleware/jwtAuth');
 const asyncHandler = require('../middleware/asyncHandler');
 
 

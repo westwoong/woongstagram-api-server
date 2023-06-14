@@ -4,7 +4,7 @@ const express = require('express');
 const uploadRoute = express.Router();
 const multer = require('multer');
 const multerS3 = require('multer-s3');
-const authorization = require('../middleware/jsontoken');
+const authorization = require('../middleware/jwtAuth');
 const asyncHandler = require('../middleware/asyncHandler');
 require('dotenv').config('../.env');
 

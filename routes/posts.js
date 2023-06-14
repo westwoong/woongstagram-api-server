@@ -3,7 +3,7 @@ const { sequelize } = require('../config/database');
 const { Op } = require('sequelize');
 const express = require('express');
 const postsRoute = express.Router();
-const authorization = require('../middleware/jsontoken');
+const authorization = require('../middleware/jwtAuth');
 const asyncHandler = require('../middleware/asyncHandler');
 const HttpException = require('../errors/HttpException');
 
