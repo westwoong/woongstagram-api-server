@@ -15,7 +15,12 @@ const dbConnecting = async () => {
     try {
         await sequelize.authenticate();
         logger.info('sequelize connection success!');
-        await sequelize.sync({ force: false });
+        if (process.env.SERVER_SETTING === 'DEV') {
+            await sequelize.sync({ force: false });
+        }
+        else if (process.env.SERVER_SETTING === 'LIVE'){
+            await sequelize.sync({ force: true });
+        }
     }
     catch (error) {
         logger.error(`connection failes :${error}`);
