@@ -32,7 +32,6 @@ const authorization = asyncHandler((req, res, next) => {
         throw new UnauthorizedException('로그인을 해주시기 바랍니다.');
     }
     req.user = payload.id;
-    next();
 });
 
 module.exports = authorization

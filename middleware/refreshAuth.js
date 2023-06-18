@@ -33,7 +33,6 @@ const refreshAuthorization = asyncHandler((req, res, next) => {
     }
     req.user = payload.id;
     req.token = token;
-    next();
 });
 
 module.exports = refreshAuthorization;
