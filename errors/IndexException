@@ -1,9 +1,0 @@
-const BadRequestException = require('./BadRequestException');
-const NotFoundException = require('./NotFoundException');
-const ForbiddenException = require('./ForbiddenException');
-
-module.exports = {
-  BadRequestException,
-  NotFoundException,
-  ForbiddenException,
-};
