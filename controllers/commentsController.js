@@ -2,7 +2,7 @@ const { User, Comment } = require('../models');
 const asyncHandler = require('../middleware/asyncHandler');
 const { BadRequestException, ForbiddenException, NotFoundException } = require('../errors/IndexException');
 
-module.exports.create = asyncHandler(async (req, res) => {
+module.exports.createComment = asyncHandler(async (req, res) => {
     const { postId } = req.params;
     const { comment } = req.body;
     if (!comment || comment.length > 100) {
@@ -14,7 +14,7 @@ module.exports.create = asyncHandler(async (req, res) => {
     return res.status(201).send('작성이 완료되었습니다');
 });
 
-module.exports.delete = asyncHandler(async (req, res) => {
+module.exports.deleteComment = asyncHandler(async (req, res) => {
     const { commentId } = req.params;
     const userId = req.user[0].id;
 
@@ -32,7 +32,7 @@ module.exports.delete = asyncHandler(async (req, res) => {
     return res.status(201).send('댓글 삭제가 완료되었습니다');
 });
 
-module.exports.modify = asyncHandler(async (req, res) => {
+module.exports.modifyCommet = asyncHandler(async (req, res) => {
     const { commentId } = req.params;
     const { comment } = req.body;
     const userId = req.user[0].id;
