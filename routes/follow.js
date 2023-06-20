@@ -1,4 +1,3 @@
-const { Follower } = require('../models');
 const express = require('express');
 const followsRoute = express.Router();
 const authorization = require('../middleware/jwtAuth');
