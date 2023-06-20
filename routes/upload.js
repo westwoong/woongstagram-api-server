@@ -6,22 +6,23 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const authorization = require('../middleware/jwtAuth');
 const asyncHandler = require('../middleware/asyncHandler');
+const { BadRequestException } = require('../errors/IndexException');
 require('dotenv').config('../.env');
 
 const fileFilter = (req, file, cb) => {
     const photos = req.files;
     if (!photos) {
-        return res.status(400).send('사진은 반드시 1장 이상 첨부해 주시기 바랍니다.');
+        throw new BadRequestException('사진은 반드시 1장 이상 첨부해 주시기 바랍니다.');
     }
     if (photos.length > 10) {
-        return res.status(400).send('사진은 최대 10장 까지 첨부가 가능합니다.');
+        throw new BadRequestException('사진은 최대 10장 까지 첨부가 가능합니다.');
     }
     if (!file.mimetype == 'image/jpg' || !file.mimetype == 'image/jpeg' || !file.mimetype == 'image/png' || !file.mimetype == 'image/gif') {
-        return cb(new Error('파일의 확장자는 jpg, png, gif 만 가능합니다'), false);
+        return cb(new BadRequestException('파일의 확장자는 jpg, png, gif 만 가능합니다'), false);
     }
     const maxFileSize = 20000000; // 20MB
     if (file.size > maxFileSize) {
-        return cb(new Error('파일의 용량은 20mb까지 업로드가 가능하비다.'), false);
+        return cb(new BadRequestException('파일의 용량은 20mb까지 업로드가 가능합니다.'), false);
     } else {
         cb(null, true);
     }
