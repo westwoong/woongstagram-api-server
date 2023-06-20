@@ -88,8 +88,8 @@ module.exports.search = asyncHandler(async (req, res) => {
 
     const totalCommentsCount = await Comment.count({ where: { postId } });
     const totalPages = Math.ceil(totalCommentsCount / limit);
-    const isExistNextPage = page < totalPages;
-    const isExistPreviousPage = page > 1;
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
 
     return res.status(200).send({
         commentsData: commentsData,
@@ -98,8 +98,8 @@ module.exports.search = asyncHandler(async (req, res) => {
             limit,
             totalCommentsCount,
             totalPages,
-            isExistNextPage,
-            isExistPreviousPage
+            hasNextPage,
+            hasPreviousPage
         }
     });
 });

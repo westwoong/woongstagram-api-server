@@ -37,8 +37,8 @@ module.exports.createPost = asyncHandler(async (req, res) => {
         await Promise.all(photoPromise);
 
         if (validationPhotosUrl.length > 0) {
-            const failsPhotosUrl = validationPhotosUrl.join(', ');
-            throw new NotFoundException(`${failsPhotosUrl} 해당 이미지 주소는 존재하지않습니다.`);
+            const invalidPhotosUrl = validationPhotosUrl.join(', ');
+            throw new NotFoundException(`${invalidPhotosUrl} 해당 이미지 주소는 존재하지않습니다.`);
         }
         else {
             return res.status(201).send({ postTransaction });
@@ -65,17 +65,19 @@ module.exports.modifyPost = asyncHandler(async (req, res) => {
 
     await sequelize.transaction(async (t) => {
         const updatePost = await Post.update({ content }, { where: { id: postId, userId }, transaction: t });
+
         const photoPromise = photos.map(async (photosUrl) => {
             const checkPhotoUrl = await Photo.findOne({ where: { url: photosUrl } });
             if (!checkPhotoUrl) {
                 throw new NotFoundException(`${photosUrl}해당 이미지는 존재하지 않습니다.`);
             }
             await checkPhotoUrl.update({ postId: updatePost.id }, { transaction: t });
-
         });
+
         await Promise.all(photoPromise);
         return updatePost;
     });
+
     return res.status(204).send();
 });
 
@@ -110,12 +112,12 @@ module.exports.searchPosts = asyncHandler(async (req, res) => {
         attributes: ['id', 'user_id', 'created_at', 'content'], order: [['created_at', 'DESC']], limit, offset
     });
     const postId = posts.map(post => post.id);
-    const postLikesCount = await Like.findAll({
+    const postLikeCounts = await Like.findAll({
         attributes: ['postId', [sequelize.fn('COUNT', sequelize.col('id')), 'like_count']],
         where: { postId },
         group: ['postId']
     });
-    const postCommentsCount = await Comment.findAll({
+    const postCommentCounts = await Comment.findAll({
         attributes: ['postId', [sequelize.fn('COUNT', sequelize.col('id')), 'comment_count']],
         where: { postId },
         group: ['postId']
@@ -148,9 +150,9 @@ module.exports.searchPosts = asyncHandler(async (req, res) => {
             };
         });
 
-        const checkPostLikes = postLikesCount.find(like => like.postId === id);
+        const checkPostLikes = postLikeCounts.find(like => like.postId === id);
         const likeCount = checkPostLikes ? checkPostLikes.dataValues.like_count : 0;
-        const checkPostComments = postCommentsCount.find(comment => comment.postId === id);
+        const checkPostComments = postCommentCounts.find(comment => comment.postId === id);
         const commentCount = checkPostComments ? checkPostComments.dataValues.comment_count : 0;
         const postPhotosUrl = postPhotos.filter(photo => photo.postId === id).map(photo => photo.url);
 
@@ -167,8 +169,8 @@ module.exports.searchPosts = asyncHandler(async (req, res) => {
     }
     const totalPostCount = await Post.count();
     const totalPages = Math.ceil(totalPostCount / limit);
-    const isExistNextPage = page < totalPages;
-    const isExistPreviousPage = page > 1;
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
 
     return res.status(200).send({
         posts: postsData,
@@ -177,8 +179,8 @@ module.exports.searchPosts = asyncHandler(async (req, res) => {
             limit,
             totalPostCount,
             totalPages,
-            isExistNextPage,
-            isExistPreviousPage
+            hasNextPage,
+            hasPreviousPage
         }
     });
 
@@ -230,8 +232,8 @@ module.exports.searchPostsByContent = asyncHandler(async (req, res) => {
 
     const totalPostCount = await Post.count({ where: { content: { [Op.substring]: content } } });
     const totalPages = Math.ceil(totalPostCount / limit);
-    const isExistNextPage = page < totalPages;
-    const isExistPreviousPage = page > 1;
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
 
     return res.status(200).send({
         postsData: postsData,
@@ -240,8 +242,8 @@ module.exports.searchPostsByContent = asyncHandler(async (req, res) => {
             limit,
             totalPostCount,
             totalPages,
-            isExistNextPage,
-            isExistPreviousPage
+            hasNextPage,
+            hasPreviousPage
         }
     });
 });

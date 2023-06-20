@@ -51,8 +51,8 @@ module.exports.search = asyncHandler(async (req, res) => {
 
     const totalLikesCount = await Like.count({ where: { postId } });
     const totalPages = Math.ceil(totalLikesCount / limit);
-    const isExistNextPage = page < totalPages;
-    const isExistPreviousPage = page > 1;
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
 
     return res.status(200).send({
         likesData: likesData,
@@ -61,8 +61,8 @@ module.exports.search = asyncHandler(async (req, res) => {
             limit,
             totalLikesCount,
             totalPages,
-            isExistNextPage,
-            isExistPreviousPage
+            hasNextPage,
+            hasPreviousPage
         }
 
     });
