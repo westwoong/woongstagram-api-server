@@ -100,7 +100,7 @@ module.exports.signIn = asyncHandler(async (req, res) => {
     const user = await User.findOne({ attributes: ['phone_number'], where: { phoneNumber } });
 
     if (!user) {
-        return res.status(400).send('존재하지 않는 계정입니다.');
+        throw new BadRequestException('존재하지 않는 계정입니다.');
     }
 
     const userSalt = await User.findAll({ attributes: ['salt'], where: { phoneNumber } });
@@ -120,7 +120,7 @@ module.exports.signIn = asyncHandler(async (req, res) => {
             await User.update({ refreshToken }, { where: { id: realPrimaryKey } });
             return res.status(200).send({ accessToken, refreshToken });
         } else {
-            return res.status(400).send("비밀번호가 틀렸습니다.");
+            throw new BadRequestException('비밀번호가 틀렸습니다.');
         }
     });
 })
