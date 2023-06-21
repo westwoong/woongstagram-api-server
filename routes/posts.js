@@ -9,7 +9,7 @@ postsRoute.patch('/:postId', authorization, postsController.modifyPost);
 
 postsRoute.delete('/:postId', authorization, postsController.deletePost);
 
-postsRoute.get('/', authorization, authorization, postsController.searchPosts);
+postsRoute.get('/', authorization, postsController.searchPosts);
 
 postsRoute.get('/:content', authorization, postsController.searchPostsByContent);
 

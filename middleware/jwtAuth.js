@@ -2,9 +2,9 @@ const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
 require('dotenv').config('../.env');
 const { BadRequestException, UnauthorizedException } = require('../errors/IndexException');
-const asyncHandler = require('./asyncHandler');
 
-const authorization = asyncHandler((req, res, next) => {
+const authorization = (req, res, next) => {
+    console.log("authorization - jwtAuth.js");
 
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -32,6 +32,7 @@ const authorization = asyncHandler((req, res, next) => {
         throw new UnauthorizedException('로그인을 해주시기 바랍니다.');
     }
     req.user = payload.id;
-});
+    next();
+};
 
 module.exports = authorization
