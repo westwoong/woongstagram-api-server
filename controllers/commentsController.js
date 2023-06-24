@@ -1,19 +1,18 @@
 const { User, Comment } = require('../models');
 const asyncHandler = require('../middleware/asyncHandler');
 const { BadRequestException, ForbiddenException, NotFoundException } = require('../errors/IndexException');
-const { findOneUserComment, deleteUserComment } = require('../repository/commentRepository');
+const { findOneUserComment, createComment, deleteUserComment } = require('../repository/commentRepository');
 
 module.exports.createComment = asyncHandler(async (req, res) => {
     const { postId } = req.params;
     const { comment } = req.body;
+    const userId = req.user[0].id;
 
     if (!comment || comment.length > 100) {
         throw new BadRequestException('댓글은 1글자 이상 100글자 이하로 작성해야 합니다');
     }
 
-    const userId = req.user[0].id;
-
-    await Comment.create({ userId, postId, content: comment });
+    await createComment(userId, postId, comment);
     return res.status(201).send('작성이 완료되었습니다');
 });
 
