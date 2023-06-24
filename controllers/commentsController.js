@@ -1,6 +1,7 @@
 const { User, Comment } = require('../models');
 const asyncHandler = require('../middleware/asyncHandler');
 const { BadRequestException, ForbiddenException, NotFoundException } = require('../errors/IndexException');
+const { findOneUserComment, deleteUserComment } = require('../repository/commentRepository');
 
 module.exports.createComment = asyncHandler(async (req, res) => {
     const { postId } = req.params;
@@ -20,7 +21,7 @@ module.exports.deleteComment = asyncHandler(async (req, res) => {
     const { commentId } = req.params;
     const userId = req.user[0].id;
 
-    const foundComment = await Comment.findOne({ where: { id: commentId, userId } });
+    const foundComment = await findOneUserComment(commentId, userId);
 
     if (!foundComment) {
         throw new BadRequestException('삭제하려는 댓글이 존재하지 않습니다.');
@@ -30,7 +31,8 @@ module.exports.deleteComment = asyncHandler(async (req, res) => {
         throw new ForbiddenException('본인의 댓글만 삭제가 가능합니다.');
     }
 
-    await Comment.destroy({ where: { id: commentId, userId } });
+    await deleteUserComment(commentId, userId);
+
     return res.status(201).send('댓글 삭제가 완료되었습니다');
 });
 
