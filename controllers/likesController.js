@@ -1,8 +1,8 @@
 const asyncHandler = require('../middleware/asyncHandler');
 const { NotFoundException, ConflictException } = require('../errors/IndexException');
-const { likeByPostId, isLikeByPostIdAndUserId, unLikeByPostIdAndUserId, getLikedBypostId, getLikeCountByPostId } = require('../repository/likeRepository');
+const { likeByPostId, isLikeByPostIdAndUserId, unLikeByPostIdAndUserId, getLikedByPostId, getLikeCountByPostId } = require('../repository/likeRepository');
 const { isExistByPostId, getInfoByPostId } = require('../repository/postRepository');
-const { getUserNicknameAndNameByUserId } = require('../repository/userRepository');
+const { getUserInfoByUserId } = require('../repository/userRepository');
 const { isFollowingByUserId } = require('../repository/followRepository');
 
 module.exports.likeIt = asyncHandler(async (req, res) => {
@@ -41,12 +41,12 @@ module.exports.search = asyncHandler(async (req, res) => {
     const limit = 2;
     const offset = (page - 1) * limit;
 
-    const likes = await getLikedBypostId(postId, limit, offset);
+    const likes = await getLikedByPostId(postId, limit, offset);
 
     const likesData = [];
 
     for (const like of likes) {
-        const users = await getUserNicknameAndNameByUserId(like.userId, limit, offset);
+        const users = await getUserInfoByUserId(like.userId, limit, offset);
         const posts = await getInfoByPostId(postId, limit, offset);
         const follows = await isFollowingByUserId(posts.userId);
         const followCheck = follows ? true : false;
