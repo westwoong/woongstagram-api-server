@@ -8,8 +8,6 @@ const modifyPhotosByPostId = async (photoUrl, photoSequence, photoId) => {
     return Photo.update({ url: photoUrl, sequence: photoSequence }, { where: { id: photoId } });
 }
 
-await Photo.update({ url: location, sequence: PhotoArrayLength }, { where: { id: photoId } });
-
 const findPhotosUrl = async (photoUrl) => {
     return Photo.findOne({ where: { url: photoUrl } });
 }

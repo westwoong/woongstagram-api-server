@@ -29,6 +29,10 @@ const postsCount = async () => {
     return Post.count();
 }
 
+const postCountByUserId = async (userId) => {
+    return Post.count({ where: { userId } });
+}
+
 const searchPostsByContent = async (content, limit, offset) => {
     return Post.findAll({
         where: { content: { [Op.substring]: content } },
@@ -50,5 +54,6 @@ module.exports = {
     updatePost,
     searchPosts,
     searchPostsByContent,
-    postsCount
+    postsCount,
+    postCountByUserId
 }
