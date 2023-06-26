@@ -1,6 +1,6 @@
-const { Photo } = require('../models');
 const { S3Client } = require('@aws-sdk/client-s3');
 const { BadRequestException } = require('../errors/IndexException');
+const { createPhotos, modifyPhotosByPostId } = require('../repository/photoRepository');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const asyncHandler = require('../middleware/asyncHandler');
@@ -52,7 +52,8 @@ module.exports.upload = asyncHandler(async (req, res) => {
     const photos = req.files;
 
     for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
-        await Photo.create({ url: photos[PhotoArrayLength].location, sequence: PhotoArrayLength });
+        const { location } = photos[PhotoArrayLength];
+        await createPhotos(location, PhotoArrayLength);
     }
     return res.status(201).json(photos);
 });
@@ -63,9 +64,8 @@ module.exports.modifyPhotos = asyncHandler(async (req, res) => {
 
     for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
         const { location } = photos[PhotoArrayLength];
-        await Photo.update({ url: location, sequence: PhotoArrayLength }, { where: { id: photoId } });
-
+        await modifyPhotosByPostId(location, PhotoArrayLength, photoId);
     }
-    return res.status(204).send();
+    return res.status(200).send('사진 수정이 완료되었습니다');
 })
 
