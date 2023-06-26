@@ -1,4 +1,3 @@
-const { User } = require('../models');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 require('dotenv').config('../.env');
