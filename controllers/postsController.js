@@ -18,7 +18,7 @@ module.exports.createPost = asyncHandler(async (req, res) => {
         throw new BadRequestException('photos의 값을 필수적으로 입력해야 합니다.')
     }
 
-    const result = await postService.createPost(content, photos, userId);
+    const result = await postService.create(content, photos, userId);
     return res.status(201).send({ result })
 });
 
