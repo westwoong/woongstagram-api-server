@@ -1,15 +1,13 @@
-const { User, Like, Post, Photo, Comment } = require('../models');
 const asyncHandler = require('../middleware/asyncHandler');
-const { sequelize } = require('../config/database');
-const { Op } = require('sequelize');
-const { BadRequestException, NotFoundException, ForbiddenException } = require('../errors/IndexException');
 const postService = require('../service/postService');
+const { sequelize } = require('../config/database');
+const { BadRequestException, NotFoundException, ForbiddenException } = require('../errors/IndexException');
 const { validatePost } = require('../service/validators/postValidator');
-
-const { updatePost, deletePost, getInfoByPostId } = require('../repository/postRepository');
-const { findPhotosUrl } = require('../repository/photoRepository');
-const { unLikeByPostId } = require('../repository/likeRepository');
-const { deleteCommentByPostId } = require('../repository/commentRepository');
+const { updatePost, deletePost, getInfoByPostId, getPostsByContentCount, searchPosts, searchPostsByContent, postsCount } = require('../repository/postRepository');
+const { findPhotosUrl, getPhotoByPostId } = require('../repository/photoRepository');
+const { unLikeByPostId, getPostLikesCountByPostId } = require('../repository/likeRepository');
+const { deleteCommentByPostId, getPostCommentCountByPostId, getCommentByPostId } = require('../repository/commentRepository');
+const { getUserInfoByUserId } = require('../repository/userRepository');
 
 module.exports.createPost = asyncHandler(async (req, res) => {
     const { content, photos } = req.body;
@@ -75,48 +73,34 @@ module.exports.deletePost = asyncHandler(async (req, res) => {
 
 module.exports.searchPosts = asyncHandler(async (req, res) => {
     const page = req.query.page || 1;
-    const limit = 2;
+    const limit = 20;
     const offset = (page - 1) * limit;
 
-    const posts = await Post.findAll({
-        attributes: ['id', 'user_id', 'created_at', 'content'], order: [['created_at', 'DESC']], limit, offset
-    });
+    const posts = await searchPosts(limit, offset);
+
     const postId = posts.map(post => post.id);
-    const postLikeCounts = await Like.findAll({
-        attributes: ['postId', [sequelize.fn('COUNT', sequelize.col('id')), 'like_count']],
-        where: { postId },
-        group: ['postId']
-    });
-    const postCommentCounts = await Comment.findAll({
-        attributes: ['postId', [sequelize.fn('COUNT', sequelize.col('id')), 'comment_count']],
-        where: { postId },
-        group: ['postId']
-    });
-    const postPhotos = await Photo.findAll({ where: { postId }, attributes: ['postId', 'url'], order: [['created_at', 'DESC']], limit });
+
+    const postLikeCounts = await getPostLikesCountByPostId(postId);
+    const postCommentCounts = await getPostCommentCountByPostId(postId);
+    const postPhotos = await getPhotoByPostId(postId, limit, offset);
 
     const postsData = [];
 
     for (const post of posts) {
-        const { id, user_id, created_at } = post.dataValues;
-        const findUserNickname = await User.findOne({
-            where: { id: user_id },
-            attributes: ['nickname']
-        });
-        const findComments = await Comment.findAll({
-            where: { postId: id },
-            attributes: ['content', 'userId'],
-            order: [['created_at', 'DESC']],
-            limit: 1
-        });
+        const { id, userId, createdAt } = post.dataValues;
+
+        const findUserNickname = await getUserInfoByUserId(userId);
+        const findComments = await getCommentByPostId(id, limit, offset);
         const commentUserId = findComments.map(comment => comment.dataValues.userId);
-        const userNicknames = await User.findAll({ where: { id: commentUserId }, attributes: ['id', 'nickname'] });
+        const userNicknames = await getUserInfoByUserId(commentUserId);
 
 
         const commentsAndNickname = findComments.map(comment => {
             const userNickname = userNicknames.find(user => user.id === comment.userId)?.nickname || '';
             return {
                 nickname: userNickname,
-                comment: comment.content
+                comment: comment.content,
+                createdAt
             };
         });
 
@@ -128,8 +112,8 @@ module.exports.searchPosts = asyncHandler(async (req, res) => {
 
         postsData.push({
             contents: post.content,
-            created_time: created_at,
-            usernickname: findUserNickname.nickname,
+            createdTime: createdAt,
+            usernickname: findUserNickname[0].dataValues.nickname,
             likecount: likeCount,
             commentcount: commentCount,
             commentList: commentsAndNickname,
@@ -137,7 +121,7 @@ module.exports.searchPosts = asyncHandler(async (req, res) => {
         });
 
     }
-    const totalPostCount = await Post.count();
+    const totalPostCount = await postsCount();
     const totalPages = Math.ceil(totalPostCount / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
@@ -159,48 +143,35 @@ module.exports.searchPosts = asyncHandler(async (req, res) => {
 module.exports.searchPostsByContent = asyncHandler(async (req, res) => {
     const { content } = req.params;
     const page = req.query.page || 1;
-    const limit = 2;
+    const limit = 20;
     const offset = (page - 1) * limit;
 
-    const posts = await Post.findAll({
-        where: { content: { [Op.substring]: content } },
-        order: [['created_at', 'DESC']],
-        limit,
-        offset
-    });
+    const posts = await searchPostsByContent(content, limit, offset);
     const postId = posts.map(post => post.id);
 
-    const postLikesCount = await Like.findAll({
-        attributes: ['postId', [sequelize.fn('COUNT', sequelize.col('id')), 'like_count']],
-        where: { postId },
-        group: ['postId']
-    });
+    const postLikesCount = await getPostLikesCountByPostId(postId);
 
     const postsData = [];
 
     for (const post of posts) {
-        const findUserNickname = await User.findOne({
-            where: { id: post.userId },
-            attributes: ['nickname']
-        });
-
+        const findUserNickname = await getUserInfoByUserId(post.userId);
         const checkPostLikes = postLikesCount.find(like => like.postId === post.id);
         const likeCount = checkPostLikes ? checkPostLikes.dataValues.like_count : 0;
-        const postPhotos = await Photo.findAll({ where: { postId }, attributes: ['postId', 'url'], order: [['created_at', 'DESC']], limit });
+        const postPhotos = await getPhotoByPostId(post.id, limit, offset);
 
         for (const photo of postPhotos) {
             const { url } = photo.dataValues;
             postsData.push({
                 content: post.content,
-                createAt: post.createAt,
-                nickname: findUserNickname.nickname,
+                createAt: post.createdAt,
+                nickname: findUserNickname[0].dataValues.nickname,
                 likeCount: likeCount,
                 image: url
             })
         }
     }
 
-    const totalPostCount = await Post.count({ where: { content: { [Op.substring]: content } } });
+    const totalPostCount =  await getPostsByContentCount(content);
     const totalPages = Math.ceil(totalPostCount / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
