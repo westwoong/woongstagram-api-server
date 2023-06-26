@@ -28,7 +28,8 @@ module.exports.create = async (content, photos, userId) => {
             throw new NotFoundException(`${invalidPhotosUrl} 해당 이미지 주소는 존재하지않습니다.`);
         }
         else {
-            return postTransaction;
+            return post;
         }
     });
+    return postTransaction;
 }
