@@ -8,6 +8,7 @@ const {
     createUser,
     updateRefreshTokenByUserId,
     isExistByPhoneNumber,
+    isExistByNickname,
     findUserSaltByPhoneNumber,
     findUserPasswordByPhoneNumber,
     findUserPrimaryKeyByPhoneNumber,
@@ -30,8 +31,7 @@ module.exports.signUp = asyncHandler(async (req, res) => {
         throw new BadRequestException('1글자 이상으로 된 정확한 이름을 입력해주시기 바랍니다.');
     }
 
-    const isNicknameInUse = await User.findOne({ attributes: ['nickname'], where: { nickname } });
-    if (isNicknameInUse) {
+    if (await isExistByNickname(nickname)) {
         throw new ConflictException('이미 존재하는 닉네임 입니다.');
     }
 
@@ -44,8 +44,7 @@ module.exports.signUp = asyncHandler(async (req, res) => {
         throw new BadRequestException(`잘못된 닉네임입니다, 닉네임은 영어, 숫자, _ 로만 구성이 가능합니다.`);
     }
 
-    const isPhoneNumberInUse = await User.findOne({ attributes: ['phone_number'], where: { phoneNumber } });
-    if (isPhoneNumberInUse) {
+    if (await isExistByPhoneNumber(phoneNumber)) {
         throw new ConflictException('해당 번호로 가입된 계정이 존재합니다');
     }
 

@@ -25,6 +25,10 @@ const isExistByPhoneNumber = async (phoneNumber) => {
   return User.findOne({ attributes: ['phone_number'], where: { phoneNumber } });
 }
 
+const isExistByNickname = async (nickname) => {
+  return User.findOne({ attributes: ['nickname'], where: { nickname } });
+}
+
 const findUserPasswordByPhoneNumber = async (phoneNumber) => {
   return User.findAll({ attributes: ['password'], where: { phoneNumber } });
 }
@@ -51,5 +55,6 @@ module.exports = {
   findUserPrimaryKeyByPhoneNumber,
   findRefreshTokenByUserId,
   isExistByUserId,
-  isExistByPhoneNumber
+  isExistByPhoneNumber,
+  isExistByNickname
 }
