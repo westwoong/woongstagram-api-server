@@ -2,10 +2,8 @@ const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
 require('dotenv').config('../.env');
 const { BadRequestException, UnauthorizedException } = require('../errors/IndexException');
-const asyncHandler = require('./asyncHandler');
 
-const refreshAuthorization = asyncHandler((req, res, next) => {
-
+const refreshAuthorization = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
         throw new BadRequestException('로그인을 해주시기 바랍니다.');
@@ -33,6 +31,7 @@ const refreshAuthorization = asyncHandler((req, res, next) => {
     }
     req.user = payload.id;
     req.token = token;
-});
+    next();
+};
 
 module.exports = refreshAuthorization;
