@@ -1,7 +1,7 @@
 const asyncHandler = require('../middleware/asyncHandler');
 const { BadRequestException, ForbiddenException, NotFoundException } = require('../errors/IndexException');
 const { getCommentByUserId, getCommentsByPostId, getCommentCountByPostId, createComment, deleteUserComment, modifyCommet } = require('../repository/commentRepository');
-const { findOneUserNicknameAndNameByUserId } = require('../repository/userRepository');
+const { getUserNicknameAndNameByUserId } = require('../repository/userRepository');
 
 module.exports.createComment = asyncHandler(async (req, res) => {
     const { postId } = req.params;
@@ -74,7 +74,7 @@ module.exports.search = asyncHandler(async (req, res) => {
 
     for (const comment of comments) {
         const { userId, createdAt, content } = comment.dataValues;
-        const findUserNickname = await findOneUserNicknameAndNameByUserId(userId);
+        const findUserNickname = await getUserNicknameAndNameByUserId(userId);
         console.log(findUserNickname);
 
         commentsData.push({
