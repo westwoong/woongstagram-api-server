@@ -4,6 +4,16 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config('../.env');
 const asyncHandler = require('../middleware/asyncHandler');
 const { BadRequestException, ConflictException, UnauthorizedException } = require('../errors/IndexException');
+const {
+    createUser,
+    updateRefreshTokenByUserId,
+    isExistByPhoneNumber,
+    findUserSaltByPhoneNumber,
+    findUserPasswordByPhoneNumber,
+    findUserPrimaryKeyByPhoneNumber,
+    findRefreshTokenByUserId
+} = require('../repository/userRepository');
+
 
 module.exports.signUp = asyncHandler(async (req, res) => {
     const { name, nickname, password, phoneNumber } = req.body;
@@ -82,13 +92,13 @@ module.exports.signUp = asyncHandler(async (req, res) => {
         throw new BadRequestException('비밀번호에 연속된 휴대폰번호가 포함되어있으면 안됩니다!');
     }
 
-    // 비밀번호 암호화
     crypto.randomBytes(64, (err, buffer) => {
         const salt = buffer.toString('base64');
+
         crypto.pbkdf2(password, salt, 105820, 64, 'SHA512', async (err, buffer) => {
             const hashedPassword = buffer.toString('base64');
 
-            await User.create({ phoneNumber, name, nickname, salt, password: hashedPassword });
+            await createUser(phoneNumber, name, nickname, salt, hashedPassword);
             res.status(201).send(`회원가입이 완료되었습니다\n${nickname} 님의 아이디는 ${phoneNumber} 입니다.`);
         });
     });
@@ -97,27 +107,25 @@ module.exports.signUp = asyncHandler(async (req, res) => {
 module.exports.signIn = asyncHandler(async (req, res) => {
     const { phoneNumber, password } = req.body;
 
-    const user = await User.findOne({ attributes: ['phone_number'], where: { phoneNumber } });
-
-    if (!user) {
+    if (!await isExistByPhoneNumber(phoneNumber)) {
         throw new BadRequestException('존재하지 않는 계정입니다.');
     }
 
-    const userSalt = await User.findAll({ attributes: ['salt'], where: { phoneNumber } });
-    const userPassword = await User.findAll({ attributes: ['password'], where: { phoneNumber } });
+    const userSalt = await findUserSaltByPhoneNumber(phoneNumber);
+    const userPassword = await findUserPasswordByPhoneNumber(phoneNumber);
     const salt = userSalt.map(row => row.salt).join();
     const storedHashedPassword = userPassword.map(row => row.password).join();
 
     crypto.pbkdf2(password, salt, 105820, 64, 'SHA512', async (err, buffer) => {
         const hashedPassword = buffer.toString('base64');
-        const userPrimaryKey = await User.findAll({ attributes: ['id'], where: { phoneNumber } });
+        const userPrimaryKey = await findUserPrimaryKeyByPhoneNumber(phoneNumber);
         const payload = { id: userPrimaryKey }
         const accessToken = jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "7d" });
         const refreshToken = jwt.sign(payload, process.env.REFRESH_SECRETKEY, { expiresIn: "60d" });
         const realPrimaryKey = payload.id[0].dataValues.id;
 
         if (hashedPassword === storedHashedPassword) {
-            await User.update({ refreshToken }, { where: { id: realPrimaryKey } });
+            await updateRefreshTokenByUserId(refreshToken, realPrimaryKey);
             return res.status(200).send({ accessToken, refreshToken });
         } else {
             throw new BadRequestException('비밀번호가 틀렸습니다.');
@@ -128,7 +136,9 @@ module.exports.signIn = asyncHandler(async (req, res) => {
 module.exports.refreshToken = asyncHandler(async (req, res) => {
     const userId = req.user[0].id;
     const refreshToken = req.token;
-    const storedRefreshToken = await User.findOne({ where: { id: userId }, attributes: ['refresh_Token'] });
+
+    const storedRefreshToken = await findRefreshTokenByUserId(userId);
+
     if (refreshToken !== storedRefreshToken.dataValues.refresh_Token) {
         throw new UnauthorizedException('본인인증에 실패하셨습니다');
     }
