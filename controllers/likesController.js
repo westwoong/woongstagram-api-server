@@ -1,6 +1,6 @@
 const asyncHandler = require('../middleware/asyncHandler');
 const { NotFoundException, ConflictException } = require('../errors/IndexException');
-const { likeByPostId, isLikeByPostIdAndUserId, unLikeByPostId, getLikedBypostId, getLikeCountByPostId } = require('../repository/likeRepository');
+const { likeByPostId, isLikeByPostIdAndUserId, unLikeByPostIdAndUserId, getLikedBypostId, getLikeCountByPostId } = require('../repository/likeRepository');
 const { isExistByPostId, getInfoByPostId } = require('../repository/postRepository');
 const { getUserNicknameAndNameByUserId } = require('../repository/userRepository');
 const { isFollowingByUserId } = require('../repository/followRepository');
@@ -31,7 +31,7 @@ module.exports.unlikeIt = asyncHandler(async (req, res) => {
         throw new ConflictException('좋아요를 누른 게시물에 대해서 취소가 가능합니다.');
     }
 
-    await unLikeByPostId(postId, userId);
+    await unLikeByPostIdAndUserId(postId, userId);
     res.status(204).send();
 });
 

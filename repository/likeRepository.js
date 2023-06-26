@@ -1,12 +1,17 @@
+const { Transaction } = require('sequelize/lib/sequelize');
 const { Like } = require('../models');
 
 const likeByPostId = async (postId, userId) => {
     return Like.create({ postId, userId });
 };
 
-const unLikeByPostId = async (postId, userId) => {
+const unLikeByPostIdAndUserId = async (postId, userId) => {
     return Like.destroy({ where: { postId, userId } });
 };
+
+const unLikeByPostId = async (postId, transaction) => {
+    return Like.destroy({ where: { postId }, transaction });
+}
 
 const isLikeByPostIdAndUserId = async (postId, userId) => {
     return Like.findOne({ where: { postId, userId } });
@@ -22,6 +27,7 @@ const getLikeCountByPostId = async (postId) => {
 
 module.exports = {
     likeByPostId,
+    unLikeByPostIdAndUserId,
     unLikeByPostId,
     isLikeByPostIdAndUserId,
     getLikedBypostId,
