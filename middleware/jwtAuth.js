@@ -4,8 +4,6 @@ require('dotenv').config('../.env');
 const { BadRequestException, UnauthorizedException } = require('../errors/IndexException');
 
 const authorization = (req, res, next) => {
-    console.log("authorization - jwtAuth.js");
-
     const authHeader = req.headers.authorization;
     if (!authHeader) {
         throw new BadRequestException('로그인을 해주시기 바랍니다.');

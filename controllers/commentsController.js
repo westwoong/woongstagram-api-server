@@ -1,7 +1,7 @@
-const { User, Comment } = require('../models');
 const asyncHandler = require('../middleware/asyncHandler');
 const { BadRequestException, ForbiddenException, NotFoundException } = require('../errors/IndexException');
-const { findOneUserComment, createComment, deleteUserComment } = require('../repository/commentRepository');
+const { getCommentByUserId, getCommentsByPostId, getCommentCountByPostId, createComment, deleteUserComment, modifyCommet } = require('../repository/commentRepository');
+const { findOneUserNicknameAndNameByUserId } = require('../repository/userRepository');
 
 module.exports.createComment = asyncHandler(async (req, res) => {
     const { postId } = req.params;
@@ -20,7 +20,7 @@ module.exports.deleteComment = asyncHandler(async (req, res) => {
     const { commentId } = req.params;
     const userId = req.user[0].id;
 
-    const foundComment = await findOneUserComment(commentId, userId);
+    const foundComment = await getCommentByUserId(commentId, userId);
 
     if (!foundComment) {
         throw new BadRequestException('삭제하려는 댓글이 존재하지 않습니다.');
@@ -39,7 +39,8 @@ module.exports.modifyCommet = asyncHandler(async (req, res) => {
     const { commentId } = req.params;
     const { comment } = req.body;
     const userId = req.user[0].id;
-    const foundComment = await Comment.findOne({ where: { id: commentId } });
+
+    const foundComment = await getCommentByUserId(commentId, userId);
 
     if (foundComment?.userId !== userId || foundComment === null) {
         throw new ForbiddenException('본인의 댓글만 수정이 가능합니다');
@@ -53,8 +54,8 @@ module.exports.modifyCommet = asyncHandler(async (req, res) => {
         throw new BadRequestException('댓글의 내용은 1글자 이상 100글자 이하로 작성이 가능합니다');
     }
 
-    await Comment.update({ content: comment }, { where: { id: commentId, userId } });
-    return res.status(204).send();
+    await modifyCommet(comment, commentId, userId)
+    return res.status(200).send('수정이 완료되었습니다.');
 });
 
 module.exports.search = asyncHandler(async (req, res) => {
@@ -63,12 +64,7 @@ module.exports.search = asyncHandler(async (req, res) => {
     const limit = 2;
     const offset = (page - 1) * limit;
 
-    const comments = await Comment.findAll({
-        where: { postId },
-        attributes: ['userId', 'createdAt', 'content'],
-        limit,
-        offset
-    });
+    const comments = await getCommentsByPostId(postId, limit, offset);
 
     const commentsData = [];
 
@@ -78,7 +74,8 @@ module.exports.search = asyncHandler(async (req, res) => {
 
     for (const comment of comments) {
         const { userId, createdAt, content } = comment.dataValues;
-        const findUserNickname = await User.findOne({ where: { id: userId }, attributes: ['nickname'] });
+        const findUserNickname = await findOneUserNicknameAndNameByUserId(userId);
+        console.log(findUserNickname);
 
         commentsData.push({
             nickname: findUserNickname.dataValues.nickname,
@@ -87,7 +84,7 @@ module.exports.search = asyncHandler(async (req, res) => {
         });
     }
 
-    const totalCommentsCount = await Comment.count({ where: { postId } });
+    const totalCommentsCount = await getCommentCountByPostId(postId);
     const totalPages = Math.ceil(totalCommentsCount / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
