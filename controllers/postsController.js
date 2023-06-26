@@ -6,6 +6,11 @@ const { BadRequestException, NotFoundException, ForbiddenException } = require('
 const postService = require('../service/postService');
 const { validatePost } = require('../service/validators/postValidator');
 
+const { updatePost, deletePost, getInfoByPostId } = require('../repository/postRepository');
+const { findPhotosUrl } = require('../repository/photoRepository');
+const { unLikeByPostId } = require('../repository/likeRepository');
+const { deleteCommentByPostId } = require('../repository/commentRepository');
+
 module.exports.createPost = asyncHandler(async (req, res) => {
     const { content, photos } = req.body;
     const userId = req.user[0].id;
@@ -30,40 +35,39 @@ module.exports.modifyPost = asyncHandler(async (req, res) => {
     validatePost(content, photos);
 
     await sequelize.transaction(async (t) => {
-        const updatePost = await Post.update({ content }, { where: { id: postId, userId }, transaction: t });
-
+        const post = await updatePost(content, postId, userId, t);
         const photoPromise = photos.map(async (photosUrl) => {
-            const checkPhotoUrl = await Photo.findOne({ where: { url: photosUrl } });
+            const checkPhotoUrl = await findPhotosUrl(photosUrl);
             if (!checkPhotoUrl) {
                 throw new NotFoundException(`${photosUrl}해당 이미지는 존재하지 않습니다.`);
             }
-            await checkPhotoUrl.update({ postId: updatePost.id }, { transaction: t });
+            await checkPhotoUrl.update({ postId: post.id }, { transaction: t });
         });
 
         await Promise.all(photoPromise);
-        return updatePost;
+        return post;
     });
 
-    return res.status(204).send();
+    return res.status(200).send('게시글 수정이 완료되었습니다');
 });
 
 module.exports.deletePost = asyncHandler(async (req, res) => {
     const { postId } = req.params;
     const userId = req.user[0].id;
 
-    const posts = await Post.findOne({ where: { id: postId } });
+    const post = await getInfoByPostId(postId);
 
-    if (!posts) {
+    if (!post) {
         throw new BadRequestException('게시물이 존재하지 않습니다.');
     }
-    if (posts?.userId !== userId || posts === null) {
+    if (post?.userId !== userId || post === null) {
         throw new ForbiddenException('본인의 게시글만 삭제가 가능합니다.');
     }
 
     await sequelize.transaction(async (t) => {
-        await Like.destroy({ where: { postId }, transaction: t })
-        await Comment.destroy({ where: { postId }, transaction: t });
-        await Post.destroy({ where: { id: postId }, transaction: t });
+        await unLikeByPostId(postId, t);
+        await deleteCommentByPostId(postId, t);
+        await deletePost(postId, t);
     });
 
     return res.status(204).send();

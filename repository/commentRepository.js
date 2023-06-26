@@ -20,6 +20,10 @@ const deleteUserComment = async (commentId, userId) => {
   return Comment.destroy({ where: { id: commentId, userId } });
 }
 
+const deleteCommentByPostId = async (postId, transaction) => {
+  return Comment.destroy({ where: { postId }, transaction });
+};
+
 const modifyCommet = async (comment, commentId, userId) => {
   return Comment.update({ content: comment }, { where: { id: commentId, userId } });
 }
@@ -32,5 +36,6 @@ module.exports = {
   getCommentCountByPostId,
   createComment,
   deleteUserComment,
+  deleteCommentByPostId,
   modifyCommet
 }
