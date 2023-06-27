@@ -1,7 +1,5 @@
 const { BadRequestException } = require('../errors/IndexException');
-const { createPhotos, modifyPhotosByPostId } = require('../repository/photoRepository');
 const asyncHandler = require('../middleware/asyncHandler');
-require('dotenv').config('../.env');
 const uploadService = require('../service/uploadService');
 
 module.exports.upload = asyncHandler(async (req, res) => {
@@ -19,10 +17,15 @@ module.exports.modifyPhotos = asyncHandler(async (req, res) => {
     const { photoId } = req.params;
     const photos = req.files;
 
-    for (let PhotoArrayLength = 0; PhotoArrayLength < photos.length; PhotoArrayLength++) {
-        const { location } = photos[PhotoArrayLength];
-        await modifyPhotosByPostId(location, PhotoArrayLength, photoId);
+    if (!photoId) {
+        throw new BadRequestException('photoId 값이 존재하지 않습니다.');
     }
+
+    if (!photos) {
+        throw new BadRequestException('photos 값이 존재하지 않습니다.');
+    }
+
+    await uploadService.modify(photoId, photos);
     return res.status(200).send('사진 수정이 완료되었습니다');
 })
 
