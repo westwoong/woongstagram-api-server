@@ -53,21 +53,14 @@ module.exports.deletePost = asyncHandler(async (req, res) => {
     const { postId } = req.params;
     const userId = req.user[0].id;
 
-    const post = await getInfoByPostId(postId);
-
-    if (!post) {
-        throw new BadRequestException('게시물이 존재하지 않습니다.');
-    }
-    if (post?.userId !== userId || post === null) {
-        throw new ForbiddenException('본인의 게시글만 삭제가 가능합니다.');
+    if (!postId) {
+        throw new BadRequestException('postId 값이 존재하지 않습니다.')
     }
 
-    await sequelize.transaction(async (t) => {
-        await unLikeByPostId(postId, t);
-        await deleteCommentByPostId(postId, t);
-        await deletePost(postId, t);
-    });
-
+    if (!userId) {
+        throw new BadRequestException('userId 값이 존재하지 않습니다.')
+    }
+    await postService.delete(postId, userId);
     return res.status(204).send();
 });
 

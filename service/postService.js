@@ -55,6 +55,24 @@ module.exports.modify = async (postId, content, photos, userId) => {
     return postModifyTransaction;
 }
 
+module.exports.delete = async (postId, userId) => {
+    const post = await getInfoByPostId(postId);
+
+    if (!post) {
+        throw new BadRequestException('게시물이 존재하지 않습니다.');
+    }
+    if (post?.userId !== userId || post === null) {
+        throw new ForbiddenException('본인의 게시글만 삭제가 가능합니다.');
+    }
+
+    await sequelize.transaction(async (t) => {
+        await unLikeByPostId(postId, t);
+        await deleteCommentByPostId(postId, t);
+        await deletePost(postId, t);
+    });
+    return
+}
+
 module.exports.search = async (req) => {
     const page = req.query.page || 1;
     const limit = 20;
