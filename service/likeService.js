@@ -14,3 +14,14 @@ module.exports.like = async (postId, userId) => {
 
     return likeByPostId(postId, userId);
 }
+
+module.exports.unlike = async (postId, userId) => {
+    if (!await isExistByPostId(postId)) {
+        throw new NotFoundException('없는 게시물 입니다.');
+    }
+    if (!await isLikeByPostIdAndUserId(postId, userId)) {
+        throw new ConflictException('좋아요를 누른 게시물에 대해서 취소가 가능합니다.');
+    }
+
+    return unLikeByPostIdAndUserId(postId, userId);
+}
