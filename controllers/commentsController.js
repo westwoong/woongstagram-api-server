@@ -30,17 +30,15 @@ module.exports.deleteComment = asyncHandler(async (req, res) => {
     const { commentId } = req.params;
     const userId = req.user[0].id;
 
-    const foundComment = await getCommentByUserId(commentId, userId);
-
-    if (!foundComment) {
-        throw new BadRequestException('삭제하려는 댓글이 존재하지 않습니다.');
+    if (!commentId) {
+        throw new BadRequestException('commentId 값이 존재하지 않습니다.');
     }
 
-    if (foundComment?.userId !== userId || foundComment === null) {
-        throw new ForbiddenException('본인의 댓글만 삭제가 가능합니다.');
+    if (!userId) {
+        throw new BadRequestException('userId 값이 존재하지 않습니다.');
     }
 
-    await deleteUserComment(commentId, userId);
+    await commentService.delete(commentId, userId);
 
     return res.status(201).send('댓글 삭제가 완료되었습니다');
 });
