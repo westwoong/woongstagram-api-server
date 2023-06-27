@@ -14,7 +14,7 @@ const {
     findRefreshTokenByUserId
 } = require('../repository/userRepository');
 
-module.exports.sginUp = async (name, nickname, password, phoneNumber) => {
+module.exports.signUp = async (name, nickname, password, phoneNumber) => {
     if (name.includes(" ")) {
         throw new BadRequestException('이름을 공백없이 입력바랍니다.');
     }

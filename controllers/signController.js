@@ -31,7 +31,7 @@ module.exports.signUp = asyncHandler(async (req, res) => {
         throw new BadRequestException('phoneNumber 값이 존재하지 않습니다');
     }
 
-    await signService.sginUp(name, nickname, password, phoneNumber);
+    await signService.signUp(name, nickname, password, phoneNumber);
 
     return res.status(201).send(`회원가입이 완료되었습니다\n${nickname} 님의 아이디는 ${phoneNumber} 입니다.`);
 });
