@@ -5,7 +5,7 @@ const commentsController = require('../controllers/commentsController');
 
 commentsRoute.post('/:postId', authorization, commentsController.createComment);
 
-commentsRoute.get('/:postId', authorization, commentsController.search);
+commentsRoute.get('/:postId', authorization, commentsController.searchComment);
 
 commentsRoute.delete('/:commentId', authorization, commentsController.deleteComment);
 

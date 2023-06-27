@@ -1,7 +1,4 @@
 const asyncHandler = require('../middleware/asyncHandler');
-const { BadRequestException, ForbiddenException, NotFoundException } = require('../errors/IndexException');
-const { getCommentByUserId, getCommentsByPostId, getCommentCountByPostId, createComment, deleteUserComment, modifyCommet } = require('../repository/commentRepository');
-const { getUserInfoByUserId } = require('../repository/userRepository');
 const commentService = require('../service/commentService');
 
 module.exports.createComment = asyncHandler(async (req, res) => {
@@ -63,7 +60,7 @@ module.exports.modifyCommet = asyncHandler(async (req, res) => {
     return res.status(200).send('수정이 완료되었습니다.');
 });
 
-module.exports.search = asyncHandler(async (req, res) => {
+module.exports.searchComment = asyncHandler(async (req, res) => {
     const { postId } = req.params;
 
     if (!postId) {
