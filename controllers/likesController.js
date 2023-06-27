@@ -1,22 +1,23 @@
 const asyncHandler = require('../middleware/asyncHandler');
-const { NotFoundException, ConflictException } = require('../errors/IndexException');
+const { BadRequestException, NotFoundException, ConflictException } = require('../errors/IndexException');
 const { likeByPostId, isLikeByPostIdAndUserId, unLikeByPostIdAndUserId, getLikedByPostId, getLikeCountByPostId } = require('../repository/likeRepository');
 const { isExistByPostId, getInfoByPostId } = require('../repository/postRepository');
 const { getUserInfoByUserId } = require('../repository/userRepository');
 const { isFollowingByUserId } = require('../repository/followRepository');
+const likeService = require('../service/likeService.js');
 
 module.exports.likeIt = asyncHandler(async (req, res) => {
     const { postId } = req.params;
     const userId = req.user[0].id;
 
-    if (!await isExistByPostId(postId)) {
-        throw new NotFoundException('없는 게시물 입니다.');
+    if(!postId){
+        throw new BadRequestException('postId 값이 존재하지 않습니다.');
     }
-    if (await isLikeByPostIdAndUserId(postId, userId)) {
-        throw new ConflictException('이미 좋아요를 누른 게시글입니다.');
+    if(!userId){
+        throw new BadRequestException('userId 값이 존재하지 않습니다.');
     }
 
-    await likeByPostId(postId, userId);
+    await likeService.like(postId, userId);
     res.status(204).send();
 });
 
