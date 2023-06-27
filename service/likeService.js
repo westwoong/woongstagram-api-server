@@ -1,28 +1,16 @@
-const { NotFoundException, ConflictException } = require('../errors/IndexException');
-const { likeByPostId, isLikeByPostIdAndUserId, unLikeByPostIdAndUserId, getLikedByPostId, getLikeCountByPostId } = require('../repository/likeRepository');
-const { isExistByPostId, getInfoByPostId } = require('../repository/postRepository');
+const { likeByPostId, unLikeByPostIdAndUserId, getLikedByPostId, getLikeCountByPostId } = require('../repository/likeRepository');
+const { getInfoByPostId } = require('../repository/postRepository');
 const { getUserInfoByUserId } = require('../repository/userRepository');
 const { isFollowingByUserId } = require('../repository/followRepository');
+const { validateLike } = require('./validators/likeValidator');
 
 module.exports.like = async (postId, userId) => {
-    if (!await isExistByPostId(postId)) {
-        throw new NotFoundException('없는 게시물 입니다.');
-    }
-    if (await isLikeByPostIdAndUserId(postId, userId)) {
-        throw new ConflictException('이미 좋아요를 누른 게시글입니다.');
-    }
-
+    await validateLike(postId, userId);
     return likeByPostId(postId, userId);
 }
 
 module.exports.unlike = async (postId, userId) => {
-    if (!await isExistByPostId(postId)) {
-        throw new NotFoundException('없는 게시물 입니다.');
-    }
-    if (!await isLikeByPostIdAndUserId(postId, userId)) {
-        throw new ConflictException('좋아요를 누른 게시물에 대해서 취소가 가능합니다.');
-    }
-
+    await validateLike(postId, userId);
     return unLikeByPostIdAndUserId(postId, userId);
 }
 
