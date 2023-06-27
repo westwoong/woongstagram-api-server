@@ -48,21 +48,18 @@ module.exports.modifyCommet = asyncHandler(async (req, res) => {
     const { comment } = req.body;
     const userId = req.user[0].id;
 
-    const foundComment = await getCommentByUserId(commentId, userId);
-
-    if (foundComment?.userId !== userId || foundComment === null) {
-        throw new ForbiddenException('본인의 댓글만 수정이 가능합니다');
+    if (!commentId) {
+        throw new BadRequestException('commentId 값이 존재하지 않습니다');
+    }
+    if (!comment) {
+        throw new BadRequestException('comment 값이 존재하지 않습니다');
+    }
+    if (!userId) {
+        throw new BadRequestException('userId 값이 존재하지 않습니다');
     }
 
-    if (!foundComment) {
-        throw new NotFoundException('수정하려는 댓글이 존재하지 않습니다.');
-    }
+    await commentService.modify(commentId, comment, userId);
 
-    if (!comment || comment.length > 100) {
-        throw new BadRequestException('댓글의 내용은 1글자 이상 100글자 이하로 작성이 가능합니다');
-    }
-
-    await modifyCommet(comment, commentId, userId)
     return res.status(200).send('수정이 완료되었습니다.');
 });
 
