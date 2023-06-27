@@ -18,3 +18,16 @@ module.exports.mypage = async (req, userId) => {
         followingCout: myFollowingCount
     };
 }
+
+module.exports.userFollowingList = async (req, userId) => {
+    const followingList = [];
+
+    const MyFollowingList = await getFollowingListByUserId(userId);
+
+    for (const following of MyFollowingList) {
+        const followingUser = await getUserInfoByUserId(following.followId);
+        const { nickname, name } = followingUser[0].dataValues;
+        followingList.push({ nickname, name });
+    }
+    return followingList
+}

@@ -17,16 +17,13 @@ module.exports.getMyInformation = asyncHandler(async (req, res) => {
 
 module.exports.getMyFollowingList = asyncHandler(async (req, res) => {
     const userId = req.user[0].id;
-    const followingList = [];
 
-    const MyFollowingList = await getFollowingListByUserId(userId);
-
-    for (const following of MyFollowingList) {
-        const followingUser = await getUserInfoByUserId(following.followId);
-        const { nickname, name } = followingUser[0].dataValues;
-        followingList.push({ nickname, name });
+    if (!userId) {
+        throw new BadRequestException('userId 값이 존재하지 않습니다.');
     }
-    return res.status(200).send({ followingList });
+
+    const result = await userService.userFollowingList(req, userId);
+    return res.status(200).send({ folloingList: result });
 });
 
 module.exports.getMyFollowerList = asyncHandler(async (req, res) => {
