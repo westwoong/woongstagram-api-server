@@ -2,7 +2,6 @@ const asyncHandler = require('../middleware/asyncHandler');
 const postService = require('../service/postService');
 const { sequelize } = require('../config/database');
 const { BadRequestException, NotFoundException, ForbiddenException } = require('../errors/IndexException');
-const { validatePost } = require('../service/validators/postValidator');
 const { updatePost, deletePost, getInfoByPostId, getPostsByContentCount, searchPosts, searchPostsByContent, postsCount } = require('../repository/postRepository');
 const { findPhotosUrl, getPhotoByPostId } = require('../repository/photoRepository');
 const { unLikeByPostId, getPostLikesCountByPostId } = require('../repository/likeRepository');
@@ -73,72 +72,8 @@ module.exports.deletePost = asyncHandler(async (req, res) => {
 });
 
 module.exports.searchPosts = asyncHandler(async (req, res) => {
-    const page = req.query.page || 1;
-    const limit = 20;
-    const offset = (page - 1) * limit;
-
-    const posts = await searchPosts(limit, offset);
-
-    const postId = posts.map(post => post.id);
-
-    const postLikeCounts = await getPostLikesCountByPostId(postId);
-    const postCommentCounts = await getPostCommentCountByPostId(postId);
-    const postPhotos = await getPhotoByPostId(postId, limit, offset);
-
-    const postsData = [];
-
-    for (const post of posts) {
-        const { id, userId, createdAt } = post.dataValues;
-
-        const findUserNickname = await getUserInfoByUserId(userId);
-        const findComments = await getCommentByPostId(id, limit, offset);
-        const commentUserId = findComments.map(comment => comment.dataValues.userId);
-        const userNicknames = await getUserInfoByUserId(commentUserId);
-
-
-        const commentsAndNickname = findComments.map(comment => {
-            const userNickname = userNicknames.find(user => user.id === comment.userId)?.nickname || '';
-            return {
-                nickname: userNickname,
-                comment: comment.content,
-                createdAt
-            };
-        });
-
-        const checkPostLikes = postLikeCounts.find(like => like.postId === id);
-        const likeCount = checkPostLikes ? checkPostLikes.dataValues.like_count : 0;
-        const checkPostComments = postCommentCounts.find(comment => comment.postId === id);
-        const commentCount = checkPostComments ? checkPostComments.dataValues.comment_count : 0;
-        const postPhotosUrl = postPhotos.filter(photo => photo.postId === id).map(photo => photo.url);
-
-        postsData.push({
-            contents: post.content,
-            createdTime: createdAt,
-            usernickname: findUserNickname[0].dataValues.nickname,
-            likecount: likeCount,
-            commentcount: commentCount,
-            commentList: commentsAndNickname,
-            images: postPhotosUrl
-        });
-
-    }
-    const totalPostCount = await postsCount();
-    const totalPages = Math.ceil(totalPostCount / limit);
-    const hasNextPage = page < totalPages;
-    const hasPreviousPage = page > 1;
-
-    return res.status(200).send({
-        posts: postsData,
-        pagination: {
-            page,
-            limit,
-            totalPostCount,
-            totalPages,
-            hasNextPage,
-            hasPreviousPage
-        }
-    });
-
+    const result = await postService.search(req);
+    return res.status(200).send(result);
 });
 
 module.exports.searchPostsByContent = asyncHandler(async (req, res) => {
