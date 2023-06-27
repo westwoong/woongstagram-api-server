@@ -1,5 +1,6 @@
 const asyncHandler = require('../middleware/asyncHandler');
 const commentService = require('../service/commentService');
+const { BadRequestException } = require('../errors/IndexException');
 
 module.exports.createComment = asyncHandler(async (req, res) => {
     const { postId } = req.params;
