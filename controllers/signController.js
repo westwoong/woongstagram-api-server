@@ -39,31 +39,17 @@ module.exports.signUp = asyncHandler(async (req, res) => {
 module.exports.signIn = asyncHandler(async (req, res) => {
     const { phoneNumber, password } = req.body;
 
-    if (!await isExistByPhoneNumber(phoneNumber)) {
-        throw new BadRequestException('존재하지 않는 계정입니다.');
+    if (!phoneNumber) {
+        throw new BadRequestException('phoneNumber 값이 존재하지 않습니다');
     }
 
-    const userSalt = await findUserSaltByPhoneNumber(phoneNumber);
-    const userPassword = await findUserPasswordByPhoneNumber(phoneNumber);
-    const salt = userSalt.map(row => row.salt).join();
-    const storedHashedPassword = userPassword.map(row => row.password).join();
+    if (!password) {
+        throw new BadRequestException('password 값이 존재하지 않습니다.');
+    }
 
-    crypto.pbkdf2(password, salt, 105820, 64, 'SHA512', async (err, buffer) => {
-        const hashedPassword = buffer.toString('base64');
-        const userPrimaryKey = await findUserPrimaryKeyByPhoneNumber(phoneNumber);
-        const payload = { id: userPrimaryKey }
-        const accessToken = jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "7d" });
-        const refreshToken = jwt.sign(payload, process.env.REFRESH_SECRETKEY, { expiresIn: "60d" });
-        const realPrimaryKey = payload.id[0].dataValues.id;
-
-        if (hashedPassword === storedHashedPassword) {
-            await updateRefreshTokenByUserId(refreshToken, realPrimaryKey);
-            return res.status(200).send({ accessToken, refreshToken });
-        } else {
-            throw new BadRequestException('비밀번호가 틀렸습니다.');
-        }
-    });
-})
+    const result = await signService.signIn(phoneNumber, password);
+    return res.status(200).send(result)
+});
 
 module.exports.refreshToken = asyncHandler(async (req, res) => {
     const userId = req.user[0].id;
