@@ -1,9 +1,5 @@
 const asyncHandler = require('../middleware/asyncHandler');
 const { BadRequestException } = require('../errors/IndexException');
-const { likeByPostId, isLikeByPostIdAndUserId, unLikeByPostIdAndUserId, getLikedByPostId, getLikeCountByPostId } = require('../repository/likeRepository');
-const { isExistByPostId, getInfoByPostId } = require('../repository/postRepository');
-const { getUserInfoByUserId } = require('../repository/userRepository');
-const { isFollowingByUserId } = require('../repository/followRepository');
 const likeService = require('../service/likeService.js');
 
 module.exports.likeIt = asyncHandler(async (req, res) => {
