@@ -1,6 +1,6 @@
 const { getCommentByUserId, getCommentsByPostId, getCommentCountByPostId, createComment, deleteUserComment, modifyCommet } = require('../repository/commentRepository');
 const { getUserInfoByUserId } = require('../repository/userRepository');
-const { validateComment } = require('../service/validators/commentValidator');
+const { validateComment } = require('./validators/commentValidator');
 
 
 module.exports.create = async (postId, comment, userId) => {
