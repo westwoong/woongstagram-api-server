@@ -14,11 +14,15 @@ module.exports.createPost = asyncHandler(async (req, res) => {
     const userId = req.user[0].id;
 
     if (!content) {
-        throw new BadRequestException('content의 값을 필수적으로 입력해야 합니다.')
+        throw new BadRequestException('content 값이 존재하지 않습니다.')
     }
 
     if (!photos) {
-        throw new BadRequestException('photos의 값을 필수적으로 입력해야 합니다.')
+        throw new BadRequestException('photos 값이 존재하지 않습니다.')
+    }
+
+    if (!userId) {
+        throw new BadRequestException('userId 값이 존재하지 않습니다.')
     }
 
     const result = await postService.create(content, photos, userId);
@@ -30,22 +34,19 @@ module.exports.modifyPost = asyncHandler(async (req, res) => {
     const { content, photos } = req.body;
     const userId = req.user[0].id;
 
-    validatePost(content, photos);
+    if (!content) {
+        throw new BadRequestException('content 값이 존재하지 않습니다.')
+    }
 
-    await sequelize.transaction(async (t) => {
-        const post = await updatePost(content, postId, userId, t);
-        const photoPromise = photos.map(async (photosUrl) => {
-            const checkPhotoUrl = await findPhotosUrl(photosUrl);
-            if (!checkPhotoUrl) {
-                throw new NotFoundException(`${photosUrl}해당 이미지는 존재하지 않습니다.`);
-            }
-            await checkPhotoUrl.update({ postId: post.id }, { transaction: t });
-        });
+    if (!photos) {
+        throw new BadRequestException('photos 값이 존재하지 않습니다.')
+    }
 
-        await Promise.all(photoPromise);
-        return post;
-    });
+    if (!userId) {
+        throw new BadRequestException('userId 값이 존재하지 않습니다.')
+    }
 
+    await postService.modify(postId, content, photos, userId);
     return res.status(200).send('게시글 수정이 완료되었습니다');
 });
 
@@ -171,7 +172,7 @@ module.exports.searchPostsByContent = asyncHandler(async (req, res) => {
         }
     }
 
-    const totalPostCount =  await getPostsByContentCount(content);
+    const totalPostCount = await getPostsByContentCount(content);
     const totalPages = Math.ceil(totalPostCount / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
