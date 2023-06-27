@@ -1,12 +1,7 @@
 const asyncHandler = require('../middleware/asyncHandler');
 const postService = require('../service/postService');
-const { sequelize } = require('../config/database');
-const { BadRequestException, NotFoundException, ForbiddenException } = require('../errors/IndexException');
-const { updatePost, deletePost, getInfoByPostId, getPostsByContentCount, searchPosts, searchPostsByContent, postsCount } = require('../repository/postRepository');
-const { findPhotosUrl, getPhotoByPostId } = require('../repository/photoRepository');
-const { unLikeByPostId, getPostLikesCountByPostId } = require('../repository/likeRepository');
-const { deleteCommentByPostId, getPostCommentCountByPostId, getCommentByPostId } = require('../repository/commentRepository');
-const { getUserInfoByUserId } = require('../repository/userRepository');
+const { BadRequestException } = require('../errors/IndexException');
+
 
 module.exports.createPost = asyncHandler(async (req, res) => {
     const { content, photos } = req.body;
