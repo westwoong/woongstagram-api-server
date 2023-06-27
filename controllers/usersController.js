@@ -1,25 +1,18 @@
 const { getUserInfoByUserId } = require('../repository/userRepository');
-const { followersCountByUserId, followingCountByUserId, getFollowingListByUserId, getFollowerListByUserId } = require('../repository/followRepository');
-const { postCountByUserId } = require('../repository/postRepository');
+const { getFollowingListByUserId, getFollowerListByUserId } = require('../repository/followRepository');
+const { BadRequestException } = require('../errors/IndexException');
 const asyncHandler = require('../middleware/asyncHandler');
+const userService = require('../service/userService');
 
 module.exports.getMyInformation = asyncHandler(async (req, res) => {
     const userId = req.user[0].id;
 
-    const user = await getUserInfoByUserId(userId);
-    const myPostCount = await postCountByUserId(userId);
-    const myFollowersCount = await followersCountByUserId(userId);
-    const myFollowingCount = await followingCountByUserId(userId);
+    if (!userId) {
+        throw new BadRequestException('userId 값이 존재하지 않습니다.');
+    }
 
-    const { nickname, name } = user[0].dataValues;
-
-    return res.status(200).send({
-        userNickname: nickname,
-        userName: name,
-        postCount: myPostCount,
-        followerCount: myFollowersCount,
-        followingCout: myFollowingCount
-    });
+    const result = await userService.mypage(req, userId);
+    return res.status(200).send(result);
 });
 
 module.exports.getMyFollowingList = asyncHandler(async (req, res) => {
