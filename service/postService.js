@@ -103,8 +103,8 @@ module.exports.search = async (req) => {
             commentList: commentsAndNickname,
             images: postPhotosUrl
         });
-
     }
+
     const totalPostCount = await postsCount();
     const totalPages = Math.ceil(totalPostCount / limit);
     const hasNextPage = page < totalPages;
@@ -121,5 +121,52 @@ module.exports.search = async (req) => {
             hasPreviousPage
         }
     };
+}
 
+module.exports.searchContent = async (req, content) => {
+    const page = req.query.page || 1;
+    const limit = 20;
+    const offset = (page - 1) * limit;
+
+    const posts = await searchPostsByContent(content, limit, offset);
+    const postId = posts.map(post => post.id);
+
+    const postLikesCount = await getPostLikesCountByPostId(postId);
+
+    const postsData = [];
+
+    for (const post of posts) {
+        const findUserNickname = await getUserInfoByUserId(post.userId);
+        const checkPostLikes = postLikesCount.find(like => like.postId === post.id);
+        const likeCount = checkPostLikes ? checkPostLikes.dataValues.like_count : 0;
+        const postPhotos = await getPhotoByPostId(post.id, limit, offset);
+
+        for (const photo of postPhotos) {
+            const { url } = photo.dataValues;
+            postsData.push({
+                content: post.content,
+                createAt: post.createdAt,
+                nickname: findUserNickname[0].dataValues.nickname,
+                likeCount: likeCount,
+                image: url
+            })
+        }
+    }
+
+    const totalPostCount = await getPostsByContentCount(content);
+    const totalPages = Math.ceil(totalPostCount / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+        posts: postsData,
+        pagination: {
+            page,
+            limit,
+            totalPostCount,
+            totalPages,
+            hasNextPage,
+            hasPreviousPage
+        }
+    };
 }

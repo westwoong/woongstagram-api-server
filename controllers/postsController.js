@@ -78,49 +78,10 @@ module.exports.searchPosts = asyncHandler(async (req, res) => {
 
 module.exports.searchPostsByContent = asyncHandler(async (req, res) => {
     const { content } = req.params;
-    const page = req.query.page || 1;
-    const limit = 20;
-    const offset = (page - 1) * limit;
 
-    const posts = await searchPostsByContent(content, limit, offset);
-    const postId = posts.map(post => post.id);
-
-    const postLikesCount = await getPostLikesCountByPostId(postId);
-
-    const postsData = [];
-
-    for (const post of posts) {
-        const findUserNickname = await getUserInfoByUserId(post.userId);
-        const checkPostLikes = postLikesCount.find(like => like.postId === post.id);
-        const likeCount = checkPostLikes ? checkPostLikes.dataValues.like_count : 0;
-        const postPhotos = await getPhotoByPostId(post.id, limit, offset);
-
-        for (const photo of postPhotos) {
-            const { url } = photo.dataValues;
-            postsData.push({
-                content: post.content,
-                createAt: post.createdAt,
-                nickname: findUserNickname[0].dataValues.nickname,
-                likeCount: likeCount,
-                image: url
-            })
-        }
+    if (!content) {
+        throw new BadRequestException('content 값이 존재하지 않습니다.');
     }
-
-    const totalPostCount = await getPostsByContentCount(content);
-    const totalPages = Math.ceil(totalPostCount / limit);
-    const hasNextPage = page < totalPages;
-    const hasPreviousPage = page > 1;
-
-    return res.status(200).send({
-        postsData: postsData,
-        pagination: {
-            page,
-            limit,
-            totalPostCount,
-            totalPages,
-            hasNextPage,
-            hasPreviousPage
-        }
-    });
+    const result = await postService.searchContent(req, content);
+    return res.status(200).send(result);
 });
