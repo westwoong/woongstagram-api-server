@@ -31,3 +31,16 @@ module.exports.userFollowingList = async (req, userId) => {
     }
     return followingList
 }
+
+module.exports.userFollowerList = async (req, userId) => {
+    const followerList = [];
+
+    const followers = await getFollowerListByUserId(userId);
+
+    for (const follower of followers) {
+        const followerUser = await getUserInfoByUserId(follower.followerId);
+        const { nickname, name } = followerUser[0].dataValues;
+        followerList.push({ nickname, name })
+    }
+    return followerList;
+}
