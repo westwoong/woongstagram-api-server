@@ -2,17 +2,27 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { BadRequestException, ForbiddenException, NotFoundException } = require('../errors/IndexException');
 const { getCommentByUserId, getCommentsByPostId, getCommentCountByPostId, createComment, deleteUserComment, modifyCommet } = require('../repository/commentRepository');
 const { getUserInfoByUserId } = require('../repository/userRepository');
+const commentService = require('../service/commentService');
 
 module.exports.createComment = asyncHandler(async (req, res) => {
     const { postId } = req.params;
     const { comment } = req.body;
     const userId = req.user[0].id;
 
-    if (!comment || comment.length > 100) {
-        throw new BadRequestException('댓글은 1글자 이상 100글자 이하로 작성해야 합니다');
+    if (!postId) {
+        throw new BadRequestException('postId 값이 존재하지 않습니다');
     }
 
-    await createComment(userId, postId, comment);
+    if (!comment) {
+        throw new BadRequestException('comment 값이 존재하지 않습니다.');
+    }
+
+    if (!userId) {
+        throw new BadRequestException('userId 값이 존재하지 않습니다.');
+    }
+
+    await commentService.create(postId, comment, userId);
+
     return res.status(201).send('작성이 완료되었습니다');
 });
 
