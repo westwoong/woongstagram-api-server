@@ -1,17 +1,16 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 require('dotenv').config('../.env');
-const { BadRequestException, UnauthorizedException } = require('../errors/IndexException');
+const { BadRequestException } = require('../errors/IndexException');
 const {
     createUser,
     updateRefreshTokenByUserId,
-    isExistByPhoneNumber,
     findUserSaltByPhoneNumber,
     findUserPasswordByPhoneNumber,
     findUserPrimaryKeyByPhoneNumber,
     findRefreshTokenByUserId
 } = require('../repository/userRepository');
-const { validateSignUp } = require('./validators/signValidator');
+const { validateSignUp, validateSignIn, validateRefreshToken } = require('./validators/signValidator');
 
 module.exports.signUp = async (name, nickname, password, phoneNumber) => {
     await validateSignUp(name, nickname, password, phoneNumber);
@@ -28,10 +27,7 @@ module.exports.signUp = async (name, nickname, password, phoneNumber) => {
 }
 
 module.exports.signIn = async (phoneNumber, password) => {
-    if (!await isExistByPhoneNumber(phoneNumber)) {
-        throw new BadRequestException('존재하지 않는 계정입니다.');
-    }
-
+    await validateSignIn(phoneNumber);
     const userSalt = await findUserSaltByPhoneNumber(phoneNumber);
     const userPassword = await findUserPasswordByPhoneNumber(phoneNumber);
     const salt = userSalt.map(row => row.salt).join();
@@ -59,9 +55,7 @@ module.exports.signIn = async (phoneNumber, password) => {
 module.exports.requestSendRefreshToken = async (userId, refreshToken) => {
     const storedRefreshToken = await findRefreshTokenByUserId(userId);
 
-    if (refreshToken !== storedRefreshToken.dataValues.refresh_Token) {
-        throw new UnauthorizedException('본인인증에 실패하셨습니다');
-    }
+    await validateRefreshToken(refreshToken, storedRefreshToken);
 
     const payload = { id: userId };
 

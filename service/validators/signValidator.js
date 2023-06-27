@@ -1,17 +1,5 @@
-const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
-require('dotenv').config('../../.env');
 const { BadRequestException, ConflictException, UnauthorizedException } = require('../../errors/IndexException');
-const {
-    createUser,
-    updateRefreshTokenByUserId,
-    isExistByPhoneNumber,
-    isExistByNickname,
-    findUserSaltByPhoneNumber,
-    findUserPasswordByPhoneNumber,
-    findUserPrimaryKeyByPhoneNumber,
-    findRefreshTokenByUserId
-} = require('../../repository/userRepository');
+const { isExistByPhoneNumber, isExistByNickname } = require('../../repository/userRepository');
 
 module.exports.validateSignUp = async (name, nickname, password, phoneNumber) => {
     if (name.includes(" ")) {
@@ -84,5 +72,17 @@ module.exports.validateSignUp = async (name, nickname, password, phoneNumber) =>
 
     if (isPasswordIncludePhoneNumber) {
         throw new BadRequestException('비밀번호에 연속된 휴대폰번호가 포함되어있으면 안됩니다!');
+    }
+}
+
+module.exports.validateSignIn = async (phoneNumber) => {
+    if (!await isExistByPhoneNumber(phoneNumber)) {
+        throw new BadRequestException('존재하지 않는 계정입니다.');
+    }
+}
+
+module.exports.validateRefreshToken = async (refreshToken, storedRefreshToken) => {
+    if (refreshToken !== storedRefreshToken.dataValues.refresh_Token) {
+        throw new UnauthorizedException('본인인증에 실패하셨습니다');
     }
 }
