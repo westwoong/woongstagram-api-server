@@ -65,43 +65,11 @@ module.exports.modifyCommet = asyncHandler(async (req, res) => {
 
 module.exports.search = asyncHandler(async (req, res) => {
     const { postId } = req.params;
-    const page = req.query.page || 1;
-    const limit = 20;
-    const offset = (page - 1) * limit;
 
-    const comments = await getCommentsByPostId(postId, limit, offset);
-
-    const commentsData = [];
-
-    if (!comments || comments.length === 0) {
-        throw new NotFoundException('게시글이 존재하지 않습니다.');
+    if (!postId) {
+        throw new BadRequestException('postId 값이 존재하지않습니다');
     }
 
-    for (const comment of comments) {
-        const { userId, createdAt, content } = comment.dataValues;
-
-        const findUserNickname = await getUserInfoByUserId(userId);
-        commentsData.push({
-            nickname: findUserNickname.dataValues.nickname,
-            content: content,
-            createdAt: createdAt
-        });
-    }
-
-    const totalCommentsCount = await getCommentCountByPostId(postId);
-    const totalPages = Math.ceil(totalCommentsCount / limit);
-    const hasNextPage = page < totalPages;
-    const hasPreviousPage = page > 1;
-
-    return res.status(200).send({
-        commentsData: commentsData,
-        pagination: {
-            page,
-            limit,
-            totalCommentsCount,
-            totalPages,
-            hasNextPage,
-            hasPreviousPage
-        }
-    });
+    const result = await commentService.search(postId, req);
+    return res.status(200).send(result);
 });
