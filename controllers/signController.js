@@ -1,18 +1,5 @@
-const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
-require('dotenv').config('../.env');
 const asyncHandler = require('../middleware/asyncHandler');
-const { BadRequestException, ConflictException, UnauthorizedException } = require('../errors/IndexException');
-const {
-    createUser,
-    updateRefreshTokenByUserId,
-    isExistByPhoneNumber,
-    isExistByNickname,
-    findUserSaltByPhoneNumber,
-    findUserPasswordByPhoneNumber,
-    findUserPrimaryKeyByPhoneNumber,
-    findRefreshTokenByUserId
-} = require('../repository/userRepository');
+const { BadRequestException } = require('../errors/IndexException');
 const signService = require('../service/signService');
 
 module.exports.signUp = asyncHandler(async (req, res) => {
@@ -55,13 +42,14 @@ module.exports.refreshToken = asyncHandler(async (req, res) => {
     const userId = req.user[0].id;
     const refreshToken = req.token;
 
-    const storedRefreshToken = await findRefreshTokenByUserId(userId);
-
-    if (refreshToken !== storedRefreshToken.dataValues.refresh_Token) {
-        throw new UnauthorizedException('본인인증에 실패하셨습니다');
+    if (!userId) {
+        throw new BadRequestException('userId 값이 존재하지 않습니다.');
     }
-    const payload = { id: userId };
-    const accessToken = jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "7d" });
 
-    return res.status(200).send({ accessToken });
+    if (!refreshToken) {
+        throw new BadRequestException('refreshToken 값이 존재하지 않습니다.');
+    }
+
+    const result = await signService.requestSendRefreshToken(userId, refreshToken);
+    return res.status(200).send({ accessToken: result });
 })

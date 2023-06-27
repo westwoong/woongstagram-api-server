@@ -126,3 +126,16 @@ module.exports.signIn = async (phoneNumber, password) => {
         });
     });
 }
+
+module.exports.requestSendRefreshToken = async (userId, refreshToken) => {
+    const storedRefreshToken = await findRefreshTokenByUserId(userId);
+
+    if (refreshToken !== storedRefreshToken.dataValues.refresh_Token) {
+        throw new UnauthorizedException('본인인증에 실패하셨습니다');
+    }
+
+    const payload = { id: userId };
+
+    return jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "7d" });
+
+}
