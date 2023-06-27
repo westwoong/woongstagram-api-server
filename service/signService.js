@@ -27,10 +27,6 @@ module.exports.sginUp = async (name, nickname, password, phoneNumber) => {
         throw new BadRequestException('1글자 이상으로 된 정확한 이름을 입력해주시기 바랍니다.');
     }
 
-    if (await isExistByNickname(nickname)) {
-        throw new ConflictException('이미 존재하는 닉네임 입니다.');
-    }
-
     if (!nickname || nickname.length < 3 || nickname.length > 11) {
         throw new BadRequestException('닉네임을 3글자 이상 10글자 미만으로 기재해주시기 바랍니다.');
     }
@@ -40,10 +36,6 @@ module.exports.sginUp = async (name, nickname, password, phoneNumber) => {
         throw new BadRequestException(`잘못된 닉네임입니다, 닉네임은 영어, 숫자, _ 로만 구성이 가능합니다.`);
     }
 
-    if (await isExistByPhoneNumber(phoneNumber)) {
-        throw new ConflictException('해당 번호로 가입된 계정이 존재합니다');
-    }
-
     const isValidPhoneNumber = /^010\d{8}$/;
     if (!phoneNumber || !isValidPhoneNumber.test(phoneNumber)) {
         throw new BadRequestException('010으로 시작하는 정확한 휴대폰번호 11자리를 입력해주시기 바랍니다');
@@ -51,6 +43,14 @@ module.exports.sginUp = async (name, nickname, password, phoneNumber) => {
 
     if (!password || password.length < 9) {
         throw new BadRequestException('비밀번호는 최소 9자리 이상을 입력 바랍니다');
+    }
+
+    if (await isExistByNickname(nickname)) {
+        throw new ConflictException('이미 존재하는 닉네임 입니다.');
+    }
+
+    if (await isExistByPhoneNumber(phoneNumber)) {
+        throw new ConflictException('해당 번호로 가입된 계정이 존재합니다');
     }
 
     let PasswordValid = 0;
