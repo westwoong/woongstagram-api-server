@@ -1,27 +1,19 @@
-const { getCommentByUserId, getCommentsByPostId, getCommentCountByPostId, createComment, deleteUserComment, modifyCommet } = require('../repository/commentRepository');
+const { getCommentsByPostId, getCommentCountByPostId, createComment, deleteUserComment, modifyCommet } = require('../repository/commentRepository');
 const { getUserInfoByUserId } = require('../repository/userRepository');
-const { validateComment } = require('./validators/commentValidator');
-
+const { validateCreateComment, validateDeleteAndModifyComment } = require('./validators/commentValidator');
 
 module.exports.create = async (postId, comment, userId) => {
-    validateComment(comment);
-
+    await validateCreateComment(comment);
     return createComment(userId, postId, comment);
 }
 
 module.exports.delete = async (commentId, userId) => {
-    const foundComment = await getCommentByUserId(commentId, userId);
-
-    validateComment(foundComment);
-
+    await validateDeleteAndModifyComment(commentId, userId);
     return deleteUserComment(commentId, userId);
 }
 
 module.exports.modify = async (commentId, comment, userId) => {
-    const foundComment = await getCommentByUserId(commentId, userId);
-
-    validateComment(foundComment);
-
+    await validateDeleteAndModifyComment(commentId, userId);
     return modifyCommet(comment, commentId, userId);
 }
 
@@ -34,7 +26,6 @@ module.exports.search = async (postId, req) => {
 
     const commentsData = [];
 
-    validateComment(comments);
 
     for (const comment of comments) {
         const { userId, createdAt, content } = comment.dataValues;

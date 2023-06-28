@@ -1,7 +1,11 @@
 const { Comment } = require('../models');
 const { sequelize } = require('../config/database');
 
-const getCommentByUserId = async (commentId, userId) => {
+const getCommentById = async (commentId) => {
+  return Comment.findOne({ where: { id: commentId } });
+}
+
+const getCommentByIdAndUserId = async (commentId, userId) => {
   return Comment.findOne({ where: { id: commentId, userId } });
 }
 
@@ -47,11 +51,12 @@ const getCommentByPostId = async (postId, limit, offset) => {
 }
 
 module.exports = {
-  getCommentByUserId,
+  getCommentById,
+  getCommentByPostId,
   getCommentsByPostId,
+  getCommentByIdAndUserId,
   getCommentCountByPostId,
   getPostCommentCountByPostId,
-  getCommentByPostId,
   createComment,
   deleteUserComment,
   deleteCommentByPostId,
