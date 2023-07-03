@@ -23,6 +23,38 @@ const deletePost = async (postId, transaction) => {
 }
 
 const searchPosts = async (limit, offset) => {
+    return getPostsDetailData(limit, offset);
+};
+
+const postsCount = async () => {
+    return Post.count();
+}
+
+const postCountByUserId = async (userId) => {
+    return Post.count({ where: { userId } });
+}
+
+const searchPostsByContent = async (content, limit, offset) => {
+    return getPostsByContentDetail(content, limit, offset);
+}
+const getPostsByContentCount = async (content) => {
+    return Post.count({ where: { content: { [Op.substring]: content } } });
+}
+
+module.exports = {
+    isExistByPostId,
+    getInfoByPostId,
+    getPostsByContentCount,
+    createPost,
+    deletePost,
+    updatePost,
+    searchPosts,
+    searchPostsByContent,
+    postsCount,
+    postCountByUserId
+}
+
+function getPostsDetailData(limit, offset) {
     return Post.findAll({
         order: [['created_at', 'DESC']],
         limit,
@@ -64,17 +96,9 @@ const searchPosts = async (limit, offset) => {
             ],
         },
     });
-};
-
-const postsCount = async () => {
-    return Post.count();
 }
 
-const postCountByUserId = async (userId) => {
-    return Post.count({ where: { userId } });
-}
-
-const searchPostsByContent = async (content, limit, offset) => {
+function getPostsByContentDetail(content, limit, offset) {
     return Post.findAll({
         where: { content: { [Op.substring]: content } },
         order: [['created_at', 'DESC']],
@@ -117,20 +141,4 @@ const searchPostsByContent = async (content, limit, offset) => {
             ],
         }
     });
-}
-const getPostsByContentCount = async (content) => {
-    return Post.count({ where: { content: { [Op.substring]: content } } });
-}
-
-module.exports = {
-    isExistByPostId,
-    getInfoByPostId,
-    getPostsByContentCount,
-    createPost,
-    deletePost,
-    updatePost,
-    searchPosts,
-    searchPostsByContent,
-    postsCount,
-    postCountByUserId
 }
