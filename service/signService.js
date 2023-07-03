@@ -22,7 +22,7 @@ module.exports.signUp = async (name, nickname, password, phoneNumber) => {
     crypto.randomBytes(64, (err, buffer) => {
         const salt = buffer.toString('base64');
 
-        crypto.pbkdf2(password, salt, 105820, 64, 'SHA512', async (err, buffer) => {
+        crypto.pbkdf2(password, salt, iterations, keylen, 'SHA512', async (err, buffer) => {
             const hashedPassword = buffer.toString('base64');
             await createUser(phoneNumber, name, nickname, salt, hashedPassword);
         });
