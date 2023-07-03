@@ -1,4 +1,5 @@
-const { Post } = require('../models');
+const { Post, User, Comment, Like, Photo } = require('../models');
+const { sequelize } = require('../config/database');
 const { Op } = require('sequelize');
 
 const isExistByPostId = async (postId) => {
@@ -22,8 +23,48 @@ const deletePost = async (postId, transaction) => {
 }
 
 const searchPosts = async (limit, offset) => {
-    return Post.findAll({ order: [['created_at', 'DESC']], limit, offset });
-}
+    return Post.findAll({
+        order: [['created_at', 'DESC']],
+        limit,
+        offset,
+        include: [
+            {
+                model: User,
+                attributes: ['nickname'],
+                as: 'user',
+                required: true,
+            },
+            {
+                model: Comment,
+                attributes: ['content', 'createdAt'],
+                as: 'comments',
+                include: [
+                    {
+                        model: User,
+                        attributes: ['nickname'],
+                        as: 'user',
+                        required: false,
+                    },
+                ],
+                required: false,
+            },
+            {
+                model: Photo,
+                attributes: ['url'],
+                as: 'photos',
+                required: false,
+            },
+        ],
+        group: ['posts.id', 'user.id', 'comments.id', 'photos.id'],
+        subQuery: false,
+        attributes: {
+            include: [
+                [sequelize.literal('(SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id)'), 'comments_count'],
+                [sequelize.literal('(SELECT COUNT(*) FROM likes WHERE likes.post_id = posts.id)'), 'likes_count'],
+            ],
+        },
+    });
+};
 
 const postsCount = async () => {
     return Post.count();
