@@ -1,5 +1,4 @@
 const { getCommentsByPostId, getCommentCountByPostId, createComment, deleteUserComment, modifyCommet } = require('../repository/commentRepository');
-const { getUserInfoByUserId } = require('../repository/userRepository');
 const { validateCreateComment, validateDeleteAndModifyComment } = require('./validators/commentValidator');
 
 module.exports.create = async (postId, comment, userId) => {
@@ -24,27 +23,13 @@ module.exports.search = async (postId, req) => {
 
     const comments = await getCommentsByPostId(postId, limit, offset);
 
-    const commentsData = [];
-
-
-    for (const comment of comments) {
-        const { userId, createdAt, content } = comment.dataValues;
-
-        const findUserNickname = await getUserInfoByUserId(userId);
-        commentsData.push({
-            nickname: findUserNickname[0].dataValues.nickname,
-            content: content,
-            createdAt: createdAt
-        });
-    }
-
     const totalCommentsCount = await getCommentCountByPostId(postId);
     const totalPages = Math.ceil(totalCommentsCount / limit);
     const hasNextPage = page < totalPages;
     const hasPreviousPage = page > 1;
 
     return {
-        commentsData,
+        comments : comments,
         pagination: {
             page,
             limit,

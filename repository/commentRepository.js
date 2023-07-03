@@ -1,4 +1,4 @@
-const { Comment } = require('../models');
+const { Comment, User } = require('../models');
 const { sequelize } = require('../config/database');
 
 const getCommentById = async (commentId) => {
@@ -10,7 +10,7 @@ const getCommentByIdAndUserId = async (commentId, userId) => {
 }
 
 const getCommentsByPostId = async (postId, limit, offset) => {
-  return Comment.findAll({ where: { postId }, limit: limit, offset: offset });
+  return getCommentsByPostIdDetail(postId, limit, offset);
 };
 
 const getCommentCountByPostId = async (postId) => {
@@ -61,4 +61,20 @@ module.exports = {
   deleteUserComment,
   deleteCommentByPostId,
   modifyCommet
+}
+
+function getCommentsByPostIdDetail(postId, limit, offset) {
+  return Comment.findAll({
+    where: { postId },
+    limit: limit,
+    offset: offset,
+    include: [
+      {
+        model: User,
+        attributes: ['nickname'],
+        as: 'user',
+        required: true
+      }
+    ]
+  });
 }
