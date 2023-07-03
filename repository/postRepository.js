@@ -1,4 +1,4 @@
-const { Post, User, Comment, Like, Photo } = require('../models');
+const { Post, User, Comment, Photo } = require('../models');
 const { sequelize } = require('../config/database');
 const { Op } = require('sequelize');
 

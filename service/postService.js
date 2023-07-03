@@ -2,10 +2,9 @@ const { sequelize } = require('../config/database');
 const { BadRequestException, NotFoundException, ForbiddenException } = require('../errors/IndexException');
 const { validatePost } = require('./validators/postValidator');
 const { updatePost, deletePost, getInfoByPostId, getPostsByContentCount, searchPosts, searchPostsByContent, postsCount } = require('../repository/postRepository');
-const { findPhotosUrl, getPhotoByPostId } = require('../repository/photoRepository');
-const { unLikeByPostId, getPostLikesCountByPostId } = require('../repository/likeRepository');
+const { findPhotosUrl } = require('../repository/photoRepository');
+const { unLikeByPostId } = require('../repository/likeRepository');
 const { deleteCommentByPostId } = require('../repository/commentRepository');
-const { getUserInfoByUserId } = require('../repository/userRepository');
 
 module.exports.create = async (content, photos, userId) => {
     validatePost(content, photos, userId);
