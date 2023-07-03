@@ -76,8 +76,22 @@ module.exports.search = async (req) => {
     const page = req.query.page || 1;
     const limit = 20;
     const offset = (page - 1) * limit;
+    const postData = [];
 
     const posts = await searchPosts(limit, offset);
+
+    for (const post of posts) {
+        postData.push({
+            content: post.content,
+            createdAt: post.createdAt,
+            updatedAt: post.updatedAt,
+            userNickname: post.user.nickname,
+            likesCount: post.likes_count,
+            commentsCount: post.comments_count,
+            comments: post.comments,
+            images: post.photos
+        })
+    }
 
     const totalPostCount = await postsCount();
     const totalPages = Math.ceil(totalPostCount / limit);
@@ -85,7 +99,7 @@ module.exports.search = async (req) => {
     const hasPreviousPage = page > 1;
 
     return {
-        posts: posts,
+        posts: postData,
         pagination: {
             page,
             limit,
@@ -101,8 +115,22 @@ module.exports.searchContent = async (req, content) => {
     const page = req.query.page || 1;
     const limit = 20;
     const offset = (page - 1) * limit;
+    const postData = [];
 
     const posts = await searchPostsByContent(content, limit, offset);
+
+    for (const post of posts) {
+        postData.push({
+            content: post.content,
+            createdAt: post.createdAt,
+            updatedAt: post.updatedAt,
+            userNickname: post.user.nickname,
+            likesCount: post.likes_count,
+            commentsCount: post.comments_count,
+            comments: post.comments,
+            images: post.photos
+        })
+    }
 
     const totalPostCount = await getPostsByContentCount(content);
     const totalPages = Math.ceil(totalPostCount / limit);
@@ -110,7 +138,7 @@ module.exports.searchContent = async (req, content) => {
     const hasPreviousPage = page > 1;
 
     return {
-        posts: posts,
+        posts: postData,
         pagination: {
             page,
             limit,
