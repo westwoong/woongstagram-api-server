@@ -11,6 +11,10 @@ const {
     findRefreshTokenByUserId
 } = require('../repository/userRepository');
 const { validateSignUp, validateSignIn, validateRefreshToken } = require('./validators/signValidator');
+const iterations = 105820;
+const keylen = 64;
+const accessTokenExpiresTime = '7d';
+const refreshTokenExpiresTime = '60d';
 
 module.exports.signUp = async (name, nickname, password, phoneNumber) => {
     await validateSignUp(name, nickname, password, phoneNumber);
@@ -34,12 +38,12 @@ module.exports.signIn = async (phoneNumber, password) => {
     const storedHashedPassword = userPassword.map(row => row.password).join();
 
     return new Promise((successCallback) => {
-        crypto.pbkdf2(password, salt, 105820, 64, 'SHA512', async (err, buffer) => {
+        crypto.pbkdf2(password, salt, iterations, keylen, 'SHA512', async (err, buffer) => {
             const hashedPassword = buffer.toString('base64');
             const userPrimaryKey = await findUserPrimaryKeyByPhoneNumber(phoneNumber);
             const payload = { id: userPrimaryKey }
-            const accessToken = jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "7d" });
-            const refreshToken = jwt.sign(payload, process.env.REFRESH_SECRETKEY, { expiresIn: "60d" });
+            const accessToken = jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: accessTokenExpiresTime });
+            const refreshToken = jwt.sign(payload, process.env.REFRESH_SECRETKEY, { expiresIn: refreshTokenExpiresTime });
             const realPrimaryKey = payload.id[0].dataValues.id;
 
             if (hashedPassword === storedHashedPassword) {
@@ -59,6 +63,6 @@ module.exports.requestSendRefreshToken = async (userId, refreshToken) => {
 
     const payload = { id: userId };
 
-    return jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: "7d" });
+    return jwt.sign(payload, process.env.JSON_SECRETKEY, { expiresIn: accessTokenExpiresTime });
 
 }
