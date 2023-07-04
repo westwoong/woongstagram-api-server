@@ -1,9 +1,16 @@
-const { BadRequestException } = require('../../errors/IndexException');
+const { BadRequestException, NotFoundException } = require('../../errors/IndexException');
+const { isExistByPostId } = require('../../repository/postRepository');
 require('dotenv').config('../../.env');
 
 module.exports.validatePost = (content, photos) => {
   validateContent(content);
   validateContentPhotos(photos);
+}
+
+module.exports.validateIsExistPostId = async (postId) => {
+  if (!await isExistByPostId(postId)) {
+    throw new NotFoundException('해당 게시물은 존재하지 않습니다.');
+  }
 }
 
 function validateContent(content) {

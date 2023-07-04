@@ -1,5 +1,6 @@
 const { getCommentsByPostId, getCommentCountByPostId, createComment, deleteUserComment, modifyCommet } = require('../repository/commentRepository');
 const { validateCreateComment, validateDeleteAndModifyComment } = require('./validators/commentValidator');
+const { validateIsExistPostId } = require('./validators/postValidator');
 
 module.exports.create = async (postId, comment, userId) => {
     await validateCreateComment(comment);
@@ -21,8 +22,9 @@ module.exports.search = async (postId, req) => {
     const limit = 20;
     const offset = (page - 1) * limit;
 
-    const comments = await getCommentsByPostId(postId, limit, offset);
+    await validateIsExistPostId(postId);
 
+    const comments = await getCommentsByPostId(postId, limit, offset);
     const totalCommentsCount = await getCommentCountByPostId(postId);
     const totalPages = Math.ceil(totalCommentsCount / limit);
     const hasNextPage = page < totalPages;
