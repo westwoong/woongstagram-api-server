@@ -22,9 +22,9 @@ module.exports.mypage = async (req, userId) => {
 module.exports.userFollowingList = async (req, userId) => {
     const followingList = [];
 
-    const MyFollowingList = await getFollowingListByUserId(userId);
+    const myFollowingList = await getFollowingListByUserId(userId);
 
-    for (const following of MyFollowingList) {
+    for (const following of myFollowingList) {
         const followingUser = await getUserInfoByUserId(following.followId);
         const { nickname, name } = followingUser[0].dataValues;
         followingList.push({ nickname, name });
