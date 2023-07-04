@@ -1,6 +1,4 @@
 const { likeByPostId, unLikeByPostIdAndUserId, getLikedByPostId, getLikeCountByPostId } = require('../repository/likeRepository');
-const { getInfoByPostId } = require('../repository/postRepository');
-const { getUserInfoByUserId } = require('../repository/userRepository');
 const { isFollowingByUserId } = require('../repository/followRepository');
 const { validateLike } = require('./validators/likeValidator');
 
@@ -18,24 +16,19 @@ module.exports.searchPostLikedUsersInfo = async (postId, req) => {
     const page = req.query.page || 1;
     const limit = 20;
     const offset = (page - 1) * limit;
+    const likesData = [];
 
     const likes = await getLikedByPostId(postId, limit, offset);
 
-    const likesData = [];
-
     for (const like of likes) {
-        const users = await getUserInfoByUserId(like.userId, limit, offset);
-        const posts = await getInfoByPostId(postId, limit, offset);
-        const follows = await isFollowingByUserId(posts.userId);
-        const followCheck = follows ? true : false;
-
+        const follows = await isFollowingByUserId(like.userId);
+        const isFollower = follows ? true : false;
         likesData.push({
-            name: users[0].dataValues.name,
-            nickname: users[0].dataValues.nickname,
-            isFollower: followCheck
+            name: like.user.name,
+            nickname: like.user.nickname,
+            isFollower: isFollower
         })
     }
-
     const totalLikesCount = await getLikeCountByPostId(postId);
     const totalPages = Math.ceil(totalLikesCount / limit);
     const hasNextPage = page < totalPages;

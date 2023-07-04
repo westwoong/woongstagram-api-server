@@ -1,4 +1,4 @@
-const { Like } = require('../models');
+const { Like, User } = require('../models');
 const { sequelize } = require('../config/database');
 
 const likeByPostId = async (postId, userId) => {
@@ -18,7 +18,7 @@ const isLikeByPostIdAndUserId = async (postId, userId) => {
 };
 
 const getLikedByPostId = async (postId, limit, offset) => {
-    return Like.findAll({ where: { postId }, limit, offset });
+    return likedByPostIdDetail(postId, limit, offset);
 };
 
 const getLikeCountByPostId = async (postId) => {
@@ -41,4 +41,21 @@ module.exports = {
     getLikedByPostId,
     getLikeCountByPostId,
     getPostLikesCountByPostId
+}
+
+
+function likedByPostIdDetail(postId, limit, offset) {
+    return Like.findAll({
+        where: { postId },
+        limit,
+        offset,
+        include: [
+            {
+                model: User,
+                attributes: ['nickname', 'name'],
+                as: 'user',
+                required: true,
+            }
+        ]
+    });
 }
