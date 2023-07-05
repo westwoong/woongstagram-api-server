@@ -12,6 +12,9 @@ images/
 ### vscode debugger ##
 .vscode/
 
+### webstorm ###
+.idea/
+
 # Created by https://www.toptal.com/developers/gitignore/api/node,visualstudiocode,dotenv
 # Edit at https://www.toptal.com/developers/gitignore?templates=node,visualstudiocode,dotenv
 
