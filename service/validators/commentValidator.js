@@ -2,9 +2,7 @@ const { BadRequestException, ForbiddenException } = require('../../errors/IndexE
 const { getCommentByIdAndUserId, getCommentById } = require('../../repository/commentRepository')
 
 module.exports.validateCreateComment = async (comment) => {
-    if (!comment || comment.length > 100) {
-        throw new BadRequestException('댓글은 1글자 이상 100글자 이하로 작성해야 합니다');
-    }
+    validateLengthByComment(comment);
 }
 
 module.exports.validateDeleteAndModifyComment = async (commentId, userId) => {
@@ -13,6 +11,7 @@ module.exports.validateDeleteAndModifyComment = async (commentId, userId) => {
 
     validateExistingComment(foundComment);
     validateAuthority(isUserComment, userId);
+    validateLengthByComment(comment);
 }
 
 function validateExistingComment(comment) {
@@ -29,4 +28,10 @@ function validateAuthority(comment, userId) {
 
 function equalsCommentUserIdAndUserId(comment, userId) {
     return comment.userId !== userId;
+}
+
+function validateLengthByComment(comment) {
+    if (!comment || comment.length > 100) {
+        throw new BadRequestException('댓글은 1글자 이상 100글자 이하로 작성해야 합니다');
+    }
 }
