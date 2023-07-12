@@ -5,7 +5,7 @@ module.exports.validateCreateComment = async (comment) => {
     validateLengthByComment(comment);
 }
 
-module.exports.validateDeleteAndModifyComment = async (commentId, userId) => {
+module.exports.validateModifyBycomment = async (commentId, comment, userId) =>{
     const foundComment = await getCommentById(commentId);
     const isUserComment = await getCommentByIdAndUserId(commentId, userId);
 
@@ -14,9 +14,17 @@ module.exports.validateDeleteAndModifyComment = async (commentId, userId) => {
     validateLengthByComment(comment);
 }
 
+module.exports.validateDeleteByComment = async (commentId, userId) => {
+    const foundComment = await getCommentById(commentId);
+    const isUserComment = await getCommentByIdAndUserId(commentId, userId);
+
+    validateExistingComment(foundComment);
+    validateAuthority(isUserComment, userId);
+}
+
 function validateExistingComment(comment) {
     if (!comment) {
-        throw new BadRequestException('삭제하려는 댓글이 존재하지 않습니다.');
+        throw new BadRequestException('댓글이 존재하지 않습니다.');
     }
 }
 
