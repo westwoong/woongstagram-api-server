@@ -59,6 +59,9 @@ DB와 상호작용하는 함수 코드를 테이블 별로 분리하여 재사�
 ### utils
 로깅 등 공통적으로 사용하는 보조 기능을 분리하였습니다.
 
+### 🛠 Architecture
+![](https://file.notion.so/f/s/9900d43c-b13a-453b-ba2a-c3ed4bcf3303/Untitled.png?id=b591c434-4b37-41cf-abc3-828bb21e3c3b&table=block&spaceId=96bc135e-3803-4658-98c9-47ce88891e51&expirationTimestamp=1689753600000&signature=bkMpyO6-HaG0A3XTbmtNVYV-sH6rtJ8c-mvgdXi1nA0&downloadName=Untitled.png)
+
 ---
 ## 💡 main feature
 - 회원가입 및 인증 (JWT, refreshToken)
