@@ -1,5 +1,5 @@
 const { getCommentsByPostId, getCommentCountByPostId, createComment, deleteUserComment, modifyCommet } = require('../repository/commentRepository');
-const { validateCreateComment, validateDeleteByComment } = require('./validators/commentValidator');
+const { validateCreateComment, validateDeleteByComment, validateModifyBycomment } = require('./validators/commentValidator');
 const { validateIsExistPostId } = require('./validators/postValidator');
 
 module.exports.create = async (postId, comment, userId) => {
@@ -13,7 +13,7 @@ module.exports.delete = async (commentId, userId) => {
 }
 
 module.exports.modify = async (commentId, comment, userId) => {
-    // await validateDeleteByComment(commentId, userId);
+    await validateModifyBycomment(commentId, comment, userId);
     return modifyCommet(comment, commentId, userId);
 }
 
