@@ -60,7 +60,7 @@ DB와 상호작용하는 함수 코드를 테이블 별로 분리하여 재사�
 로깅 등 공통적으로 사용하는 보조 기능을 분리하였습니다.
 
 ### 🛠 Architecture
-![](https://file.notion.so/f/s/9900d43c-b13a-453b-ba2a-c3ed4bcf3303/Untitled.png?id=b591c434-4b37-41cf-abc3-828bb21e3c3b&table=block&spaceId=96bc135e-3803-4658-98c9-47ce88891e51&expirationTimestamp=1689753600000&signature=bkMpyO6-HaG0A3XTbmtNVYV-sH6rtJ8c-mvgdXi1nA0&downloadName=Untitled.png)
+![](https://www.notion.so/image/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F96bc135e-3803-4658-98c9-47ce88891e51%2F15817ccd-9e01-4245-9425-f716734a4445%2FUntitled.png?table=block&id=e49fce0a-7758-4517-93d7-22f1971032a1&spaceId=96bc135e-3803-4658-98c9-47ce88891e51&width=2000&userId=900801b3-c6a2-4914-a357-68ea4d7be040&cache=v2)
 
 ---
 ## 💡 main feature

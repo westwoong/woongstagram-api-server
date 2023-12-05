@@ -1,7 +1,7 @@
 const { sequelize } = require('../config/database');
 const { BadRequestException, NotFoundException, ForbiddenException } = require('../errors/IndexException');
 const { validatePost } = require('./validators/postValidator');
-const { updatePost, deletePost, getInfoByPostId, getPostsByContentCount, searchPosts, searchPostsByContent, postsCount } = require('../repository/postRepository');
+const { createPost, updatePost, deletePost, getInfoByPostId, getPostsByContentCount, searchPosts, searchPostsByContent, postsCount } = require('../repository/postRepository');
 const { findPhotosUrl } = require('../repository/photoRepository');
 const { unLikeByPostId } = require('../repository/likeRepository');
 const { deleteCommentByPostId } = require('../repository/commentRepository');
